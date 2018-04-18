@@ -2,25 +2,29 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Sprintee-Settings</title>
+    <title>Lackey-Settings</title>
     <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
     <script src="renderer.js"></script>
   </head>
   <body>
-    <p><a href="index.html">Exit Settings</a></p>
     <h2>Settings:</h2>
+  <h3>Script Folder</h3>
     <div class="form-group">
-      <label for="url">Links:</label>
-      <input type="url" name="homepage">
-      <input type="submit">
+      <input type="file" id="ScriptDir" class="btn btn-primary btn-fill" webkitdirectory="" directory=""/>
     </div>
     <div class="form-group">
-      <label>Script Folder:</label>
-      <input type="file" webkitdirectory multiple>
+      <button id="SetScriptPath" class="btn btn-primary" onclick="SetScriptDir()" type=button>Apply</button>
+      <button id="GetScriptPath" class="btn btn-primary" onclick="GetScriptDir()" type=button>GetScriptPath</button>
     </div>
-    <div class="form-group">
-      <label>Document Folder:</label>
-      <input type="file" webkitdirectory multiple>
+
+    <!-- Alerts -->
+    <div class="row justify-content-center top-buffer">
+        <div class="alert" role="alert" style="display: none">
+          <strong>Alert</strong>
+          <div class="message"></div>
+        </div>
     </div>
+    <hr>
+    <p><a href="index.html">Exit Settings</a></p>
   </body>
 </html>

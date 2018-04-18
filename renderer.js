@@ -6,18 +6,25 @@ const $ = require('jquery');
 const powershell = require('node-powershell');
 const fs = require("fs"); // for file system stuff
 const {shell} = require('electron');
+const Store = require('electron-store'); // user settings
+const store = new Store();
 
-// Test jQuery
-$(document).ready( () =>  console.log("Page is loaded!") )
+let ScrDir = store.get('ScriptDir'); // test for null
+//let DocDir = store.get('DocumentDir');
 
-// read scripts from dir then create html buttons - should I put this in a jquery doc.ready?
-// see for info on maybe a better method https://stackoverflow.com/questions/9643311/pass-string-parameter-in-an-onclick-function
-fs.readdir('./scripts', (err, dir) => {
-    for(let file of dir){
+// read scripts from dir then create html buttons - combine with doc function - create forms with optional params
+fs.readdir(ScrDir, (err, dir) => {
+    let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
+
+    for(let file of FltrDir){
         let name = file.match(/\w+/); // remove file extension
         console.log(name[0]);
         let btn = '<button id="' + name[0] + '" class="btn btn-primary" onclick="PoshRun(\''+ file +'\')" type="button">' + name[0] + '</button>';
-        $('#ScriptBtn').append(btn);
+        let form = '<input id="' + name[0] + '-param" type="text" name="param"><br>';
+        let chk = '<input id="' + name[0] + '-adm" type="checkbox" name="adm"><br>';
+        $('#ScriptBin').append(btn);
+        $('#ScriptBin').append(form);
+        $('#ScriptBin').append(chk);
     }
 });
 
@@ -30,19 +37,49 @@ fs.readdir('./doc', (err, dir) => {
     }
 });
 
+// check for file extension
+function CheckIfPs1(file) {
+    return file.match(/.+\.ps1\b/);
+}
+function CheckIfPdf(file) {
+    return file.match(/.+\.pdf\b/);
+}
+
+// for Saving path from settings page
+function SetScriptDir(){
+    let dir = document.getElementById("ScriptDir").files[0].path;
+    store.set('ScriptDir', dir);
+}
+
+function GetScriptDir(){
+    $('.alert .message').html(store.get('ScriptDir'));
+    $('.alert').show();
+}
+
 // to get this to run on OSX, install powershell on OSX, 
     // create symlink pwsh to powershell,
     // add path /etc/paths:  /usr/local/microsoft/powershell/6.0.2 
-function PoshRun(file){
+function PoshRun(file){ // change to use jquery to add action to button
 
-    let fulPath = "./scripts/" + file;
+    let name = file.match(/\w+/);
+    let paramName = '#' + name + '-param';
+    let admName = '#' + name + '-adm';
+    let param = $(paramName).val();
+    let Path = ScrDir + '\\' + file;
+    let fulPath =  Path + ' ' + param;
+    let adm = $(admName).is(':checked'); // if run as admin box is checked
+    
+    // works with checkbox, does not work with check box and params
+    let AdmRun = 'Start-Process powershell -argumentlist "' + '-file `"'+ Path + '`"' + param + ' -workingdirectory `"' + ScrDir + '`" -NonInteractive -NoProfile' + '" -verb runas'; 
 
     let ps = new powershell({
         executionPolicy: 'Bypass',
         noProfile: true
     })
 
-    ps.addCommand(fulPath)
+    //add check for adm and params
+    if (adm) {ps.addCommand(AdmRun)
+    } else {ps.addCommand(fulPath)};    
 
     ps.invoke()
     .then(output => {
