@@ -8,23 +8,36 @@ const fs = require("fs"); // for file system stuff
 const {shell} = require('electron');
 const Store = require('electron-store'); // user settings
 const store = new Store();
+const os = require('os'); // OS info
 
 let ScrDir = store.get('ScriptDir'); // test for null
 //let DocDir = store.get('DocumentDir');
 
 // read scripts from dir then create html buttons - combine with doc function - create forms with optional params
 fs.readdir(ScrDir, (err, dir) => {
-    let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
-
-    for(let file of FltrDir){
-        let name = file.match(/\w+/); // remove file extension
-        console.log(name[0]);
-        let btn = '<button id="' + name[0] + '" class="btn btn-primary" onclick="PoshRun(\''+ file +'\')" type="button">' + name[0] + '</button>';
-        let form = '<input id="' + name[0] + '-param" type="text" name="param"><br>';
-        let chk = '<input id="' + name[0] + '-adm" type="checkbox" name="adm"><br>';
-        $('#ScriptBin').append(btn);
-        $('#ScriptBin').append(form);
-        $('#ScriptBin').append(chk);
+    if (os.type() == 'Windows_NT'){
+        let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
+        for(let file of FltrDir){
+            let name = file.match(/\w+/); // remove file extension
+            console.log(name[0]);
+            let btn = '<button id="' + name[0] + '" class="btn btn-primary" onclick="PoshRun(\''+ file +'\')" type="button">' + name[0] + '</button>';
+            let form = '<input id="' + name[0] + '-param" type="text" name="param"><br>';
+            let chk = '<input id="' + name[0] + '-adm" type="checkbox" name="adm"><br>';
+            $('#ScriptBin').append(btn);
+            $('#ScriptBin').append(form);
+            $('#ScriptBin').append(chk);
+        }
+    } else if (os.type() == 'Linux') {
+        for(let file of dir){
+            let name = file.match(/\w+/); // remove file extension
+            console.log(name[0]);
+            let btn = '<button id="' + name[0] + '" class="btn btn-primary" onclick="BashRun(\''+ file +'\')" type="button">' + name[0] + '</button>';
+            let form = '<input id="' + name[0] + '-param" type="text" name="param"><br>';
+            let chk = '<input id="' + name[0] + '-adm" type="checkbox" name="adm"><br>';
+            $('#ScriptBin').append(btn);
+            $('#ScriptBin').append(form);
+            $('#ScriptBin').append(chk);
+        }
     }
 });
 
@@ -89,4 +102,24 @@ function PoshRun(file){ // change to use jquery to add action to button
         console.error(err)
         ps.dispose()
     })
+};
+
+function BashRun (file) {
+
+    let name = file.match(/\w+/);
+    let paramName = '#' + name + '-param';
+    let admName = '#' + name + '-adm';
+    let param = $(paramName).val();
+    let Path = ScrDir + '/' + file;
+    let fulPath =  Path + ' ' + param;
+
+    const { exec } = require('child_process');
+    exec(fulPath, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+    console.log(`stdout: ${stdout}`);
+    console.log(`stderr: ${stderr}`);
+    });
 };
