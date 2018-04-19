@@ -27,7 +27,7 @@ fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
             $('#ScriptBin').append(form);
             $('#ScriptBin').append(chk);
         }
-    } else if (os.type() == 'Linux') {
+    } else if (os.type() == 'Linux' || 'Darwin') {
         for(let file of dir){
             let name = file.match(/\w+/); // remove file extension
             console.log(name[0]);
