@@ -25,6 +25,7 @@
     "jquery": "^3.3.1",
     "node-powershell": "^3.3.1",
     "npm": "^5.8.0",
+    "powershell": "^2.3.0",
     "sudo-prompt": "^8.2.0"
   }
 }

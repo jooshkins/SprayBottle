@@ -3,7 +3,7 @@
 // All of the Node.js APIs are available in this process.
 
 const $ = require('jquery');
-const powershell = require('node-powershell');
+const powershell = require('powershell');
 const fs = require("fs"); // for file system stuff
 const {shell} = require('electron');
 const Store = require('electron-store'); // user settings
@@ -13,7 +13,7 @@ const os = require('os'); // OS info
 let ScrDir = store.get('ScriptDir'); // test for null
 //let DocDir = store.get('DocumentDir');
 
-// read scripts from dir then create html buttons - combine with doc function - create forms with optional params
+// read scripts from dir then create html buttons - combine with doc function
 fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
     if (os.type() == 'Windows_NT'){
         let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
@@ -27,7 +27,7 @@ fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
             $('#ScriptBin').append(form);
             $('#ScriptBin').append(chk);
         }
-    } else if (os.type() == 'Linux' || 'Darwin') {
+    } else if (os.type() == 'Linux' || os.type() == 'Darwin') {
         for(let file of dir){
             let name = file.match(/\w+/); // remove file extension
             console.log(name[0]);
@@ -54,6 +54,7 @@ fs.readdir('./doc', (err, dir) => {
 function CheckIfPs1(file) { // !!combine with pdf
     return file.match(/.+\.ps1\b/);
 }
+
 function CheckIfPdf(file) {
     return file.match(/.+\.pdf\b/);
 }
@@ -69,9 +70,7 @@ function GetScriptDir(){
     $('.alert').show();
 }
 
-// to get this to run on OSX, install powershell on OSX, 
-    // create symlink pwsh to powershell,
-    // add path /etc/paths:  /usr/local/microsoft/powershell/6.0.2 
+// install powershell core for OSX or Linux 
 function PoshRun(file){ // change to use jquery to add action to button  // !!combine with Bash run
 
     let name = file.match(/\w+/);
@@ -81,26 +80,36 @@ function PoshRun(file){ // change to use jquery to add action to button  // !!co
     let Path = ScrDir + '\\' + file;
     let fulPath =  Path + ' ' + param;
     let adm = $(admName).is(':checked'); // if run as admin box is checked
-    
-    // works with checkbox, does not work with check box and params
     let AdmRun = 'Start-Process powershell -argumentlist "' + '-file `"'+ Path + '`" ' + param + ' -workingdirectory `"' + ScrDir + '`" -NonInteractive -NoProfile' + '" -verb runas'; 
-    console.log(AdmRun);
-    let ps = new powershell({
+
+    if (os.type() == 'Linux' || os.type() == 'Darwin') {var pwsh = true
+    } else {var pwsh = false};
+
+    if (adm) {var cmd = AdmRun
+    } else {var cmd = fulPath};    
+
+    let ps = new powershell(cmd, {
         executionPolicy: 'Bypass',
-        noProfile: true
+        noProfile: true,
+        PSCore: pwsh
     })
 
-    if (adm) {ps.addCommand(AdmRun)
-    } else {ps.addCommand(fulPath)};    
-
-    ps.invoke()
-    .then(output => {
-        console.log(output)
-    })
-    .catch(err => {
-        console.error(err)
-        ps.dispose()
-    })
+    // Handle process errors (e.g. powershell not found)
+    ps.on("error", err => {
+        console.error(err);
+    });
+    // Stdout
+    ps.on("output", data => {
+        console.log(data);
+    });
+    // Stderr
+    ps.on("error-output", data => {
+        console.error(data);
+    });
+    // End
+    ps.on("end", code => {
+        // Do Something on end
+    });
 };
 
 function BashRun (file) {
@@ -110,7 +119,8 @@ function BashRun (file) {
     let admName = '#' + name + '-adm';
     let param = $(paramName).val();
     let Path = ScrDir + '/' + file;
-    let fulPath =  Path + ' ' + param;
+    //let fulPath = 'powershell.exe ' + Path + ' ' + param;  // works with windows, and does not produce extra terminal window
+    let fulPath = Path + ' ' + param;
     let adm = $(admName).is(':checked'); // if run as admin box is checked
 
     if (adm) { // run as adm
