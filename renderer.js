@@ -14,7 +14,7 @@ let ScrDir = store.get('ScriptDir'); // test for null
 //let DocDir = store.get('DocumentDir');
 
 // read scripts from dir then create html buttons - combine with doc function - create forms with optional params
-fs.readdir(ScrDir, (err, dir) => {
+fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
     if (os.type() == 'Windows_NT'){
         let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
         for(let file of FltrDir){
@@ -51,7 +51,7 @@ fs.readdir('./doc', (err, dir) => {
 });
 
 // check for file extension
-function CheckIfPs1(file) {
+function CheckIfPs1(file) { // !!combine with pdf
     return file.match(/.+\.ps1\b/);
 }
 function CheckIfPdf(file) {
@@ -72,7 +72,7 @@ function GetScriptDir(){
 // to get this to run on OSX, install powershell on OSX, 
     // create symlink pwsh to powershell,
     // add path /etc/paths:  /usr/local/microsoft/powershell/6.0.2 
-function PoshRun(file){ // change to use jquery to add action to button
+function PoshRun(file){ // change to use jquery to add action to button  // !!combine with Bash run
 
     let name = file.match(/\w+/);
     let paramName = '#' + name + '-param';
@@ -83,8 +83,8 @@ function PoshRun(file){ // change to use jquery to add action to button
     let adm = $(admName).is(':checked'); // if run as admin box is checked
     
     // works with checkbox, does not work with check box and params
-    let AdmRun = 'Start-Process powershell -argumentlist "' + '-file `"'+ Path + '`"' + param + ' -workingdirectory `"' + ScrDir + '`" -NonInteractive -NoProfile' + '" -verb runas'; 
-
+    let AdmRun = 'Start-Process powershell -argumentlist "' + '-file `"'+ Path + '`" ' + param + ' -workingdirectory `"' + ScrDir + '`" -NonInteractive -NoProfile' + '" -verb runas'; 
+    console.log(AdmRun);
     let ps = new powershell({
         executionPolicy: 'Bypass',
         noProfile: true
