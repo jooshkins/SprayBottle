@@ -90,7 +90,6 @@ function PoshRun(file){ // change to use jquery to add action to button  // !!co
         noProfile: true
     })
 
-    //add check for adm and params
     if (adm) {ps.addCommand(AdmRun)
     } else {ps.addCommand(fulPath)};    
 
@@ -112,14 +111,27 @@ function BashRun (file) {
     let param = $(paramName).val();
     let Path = ScrDir + '/' + file;
     let fulPath =  Path + ' ' + param;
+    let adm = $(admName).is(':checked'); // if run as admin box is checked
 
-    const { exec } = require('child_process');
-    exec(fulPath, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`exec error: ${error}`);
-            return;
-        }
-    console.log(`stdout: ${stdout}`);
-    console.log(`stderr: ${stderr}`);
-    });
+    if (adm) { // run as adm
+        var sudo = require('sudo-prompt');
+        var options = {
+        name: 'Electron',
+        };
+        sudo.exec(fulPath, options,
+        function(error, stdout, stderr) {
+            if (error) throw error;
+            console.log('stdout: ' + stdout);
+        }); 
+    } else { // run as non admin
+        const { exec } = require('child_process');
+        exec(fulPath, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+            }
+        console.log(`stdout: ${stdout}`);
+        console.log(`stderr: ${stderr}`);
+        });
+    };    
 };
