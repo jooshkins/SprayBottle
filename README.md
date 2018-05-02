@@ -1,4 +1,4 @@
-# lackey
+# SprayBottle
 A simple cross platform tool for delivering scripts and docs to offline users. -- Built on the [Electron](https://github.com/electron/electron) Framework.
 ### Features
 
