@@ -1,23 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Lackey</title>
-    <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
-    <script src="renderer.js"></script>
-  </head>
-  <body>
-    <h2>Links:</h2>
-    <p><a href="https://google.com" target="_blank">google</a></p>
-    <p><a href="http://joshuasheridan.com" target="_blank">the best site</a></p>
-    
-    <h2>Info:</h2>
-    <div class="container" id=InfoBin></div>
-    
-    <h2>Scripts:</h2>
-    <div class="container" id=ScriptBin></div>
-    
-    <hr>
-    <p><a href="settings.html">settings</a></p>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>SprayBottle - Actions</title>
+  <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
+  <link rel="stylesheet" href="css/fontawesome-all.css">
+  <link rel="stylesheet" href="css/default.css">
+  <script src="renderer.js"></script>
+  <script>
+    $(document).ready(function () {
+      Split(["#a", "#b"], {
+        direction: "vertical",
+        sizes: [50, 40],
+        gutterSize: 8,
+        cursor: "row-resize"
+      });
+    });
+  </script>
+</head>
+<body class="bg-dark">
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark shadow-lg">
+    <ul class="navbar-nav">
+      <li class="navbar-nav active small">
+        <a class="nav-link" href="index.html">
+          <i class="fas fa-code text-danger fa-lg"></i> Actions</a>
+      </li>
+      <li class="navbar-nav small">
+        <a class="nav-link" href="info.html">
+          <i class="fas fa-info text-info fa-fw fa-lg"></i>Info</a>
+      </li>
+      <li class="navbar-nav small">
+        <a class="nav-link" href="settings.html">
+          <i class="fas fa-cog fa-fw text-warning fa-lg"></i> Settings</a>
+      </li>
+    </ul>
+  </nav>
+  <div id="a" class="split content container-fluid bg-dark border border-top-0 border-left-0 border-right-0">
+    <table class="table table-sm table-dark">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Script</th>
+          <th>Parameters</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="ScriptBin">
+      </tbody>
+    </table>
+    <div id="NoScr" class="alert alert-secondary">
+        <strong>No scripts.</strong> Select a script folder in
+        <a href="settings.html" class="alert-link">settings</a> or check folder for valid scripts.
+    </div>
+  </div>
+  <div id="b" class "split content">
+    <div class="bg-dark container-fluid text-light h-100">
+      <div class="form-group h-100">
+        <label for="console">
+          <i class="fas fa-terminal text-info"></i>
+          Console
+        </label>
+        <button id="clear" class="btn btn-outline-light btn-sm float-right" onclick="ClearConsole()">Clear Console</button>
+        <textarea id="console" class="form-control bg-secondary text-white h-100" disabled></textarea>
+      </div>
+    </div>
+  </div>
+</body>
 </html>

@@ -59,3 +59,13 @@ typings/
 
 # VS Code Dir
 .vscode/
+
+# built app
+build
+dist
+
+# Test Files and old files
+test
+
+# Sass temp files
+.sass-cache/

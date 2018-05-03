@@ -1,30 +1,62 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Lackey-Settings</title>
-    <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
-    <script src="renderer.js"></script>
-  </head>
-  <body>
-    <h2>Settings:</h2>
-  <h3>Script Folder</h3>
-    <div class="form-group">
-      <input type="file" id="ScriptDir" class="btn btn-primary btn-fill" webkitdirectory="" directory=""/>
-    </div>
-    <div class="form-group">
-      <button id="SetScriptPath" class="btn btn-primary" onclick="SetScriptDir()" type=button>Apply</button>
-      <button id="GetScriptPath" class="btn btn-primary" onclick="GetScriptDir()" type=button>GetScriptPath</button>
-    </div>
 
-    <!-- Alerts -->
-    <div class="row justify-content-center top-buffer">
-        <div class="alert" role="alert" style="display: none">
-          <strong>Alert</strong>
-          <div class="message"></div>
-        </div>
+<head>
+  <meta charset="UTF-8">
+  <title>SprayBottle - Settings</title>
+  <script>window.jQuery = window.$ = require('jquery');</script>
+  <script src="node_modules/popper.js/dist/umd/popper.min.js"></script>
+  <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
+  <link rel="stylesheet" href="css/fontawesome-all.css">
+  <link rel="stylesheet" href="css/default.css">
+  <script src="renderer.js"></script>
+  <script>
+    $(document).ready(function () {
+      GetDirs();
+      LoadSettingsNav();
+      $('[data-toggle="popover"]').popover();
+    });
+  </script>
+</head>
+
+<body class="bg-dark">
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark shadow-lg">
+  </nav>
+  <div class="container-fluid bg-dark text-light">
+    <div>
+      <label>Scripts Folder:
+        <span id="ReadPathScript" class="text-muted"></span>
+      </label>
+    </div>
+    <div class="btn-group">
+      <input type="file" id="ScriptDir" class="btn btn-primary btn-fill" webkitdirectory="" directory="" />
+      <button class="btn btn-warning" onclick="SetScriptDir()" type=button>Apply</button>
+    </div>
+    <div>
+      <label>Document Folder:
+        <span id="ReadPathDoc" class="text-muted"></span>
+      </label>
+    </div>
+    <div class="btn-group">
+      <input type="file" id="DocDir" class="btn btn-primary btn-fill" webkitdirectory="" directory="" />
+      <button class="btn btn-warning" onclick="SetDocDir()" type=button>Apply</button>
     </div>
     <hr>
-    <p><a href="index.html">Exit Settings</a></p>
-  </body>
+    <div>
+      <label>Self Service mode for end users - hide settings and admin options</label>
+      <p class="text-muted">Use
+        <kbd class="text-muted">alt</kbd> key to show the menu for the settings page </p>
+    </div>
+    <button class="btn btn-primary" onclick="SetHomePage('index-basic.html')" data-toggle="popover" data-trigger="focus" title="Restart App"
+      data-content="Close and relaunch application to apply changes.">Set Self Service Mode</button>
+    <hr>
+    <div>
+      <label>Admin mode - full set of options available</label>
+    </div>
+    <button class="btn btn-primary" onclick="SetHomePage('index.html')" data-toggle="popover" data-trigger="focus" title="Restart App"
+      data-content="Close and relaunch application to apply changes.">Set Admin Mode</button>
+  </div>
+</body>
+
 </html>

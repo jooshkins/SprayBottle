@@ -1,12 +1,13 @@
 const electron = require('electron')
 // Module to control application life.
-const {app, Menu, dialog} = electron
+const { app, Menu, dialog } = electron
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
-
 const path = require('path')
 const url = require('url')
-
+const Store = require('electron-store'); // user settings
+const store = new Store();
+const HomePage = store.get('HomePage');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -15,36 +16,38 @@ let mainWindow
 function createMenu() {
   const template = [
     {
-      label: 'View',
-      submenu: [
-        {
-          role: 'reload'
-        },
-        {
-          role: 'forcereload'
-        },
-        {
-          role: 'toggledevtools'
-        }
-      ]
-    },
-    {
-      label: 'Settings'
+      label: 'Settings',
+      click() {
+        mainWindow.loadURL(url.format({
+          pathname: path.join(__dirname, 'settings.html'),
+          protocol: 'file:',
+          slashes: true
+        }))
+      }
     }
   ]
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
 
-function createWindow () {
+function GetHomePage() {
+  if (HomePage) { return HomePage }
+  else { return 'index.html' };
+}
 
+function createWindow() {
   // Use custom menu
   createMenu()
 
   // Create the browser window.
-  mainWindow = new  BrowserWindow({
+  mainWindow = new BrowserWindow({
+    //frame: false,
+    backgroundColor: '#6c757d',
+    autoHideMenuBar: true,
     width: 800,
-    height: 600,
+    height: 650,
+    minWidth: 800,
+    minHeight: 650,
     webPreferences: { // allow plugins e.g. pdf viewer
       plugins: true
     }
@@ -52,26 +55,26 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
+    pathname: path.join(__dirname, GetHomePage()),
     protocol: 'file:',
     slashes: true
   }))
 
-// open links with default app
-  mainWindow.webContents.on('new-window', function(e, url) {
+  // open links with default app
+  mainWindow.webContents.on('new-window', function (e, url) {
     e.preventDefault();
     require('electron').shell.openExternal(url);
   });
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-  mainWindow = null
+    mainWindow = null
   })
 }
 
