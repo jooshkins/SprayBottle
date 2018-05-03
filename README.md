@@ -1,6 +1,6 @@
 # :droplet: SprayBottle 
-**A simple tool for supercharging your scripts**
-The aim of this app is to provide a GUI for admins to easily run scripts, and deliver those scripts to non-technical end users in a simple, non-threating way. :baby_chick:
+**A simple tool for supercharging your scripts** -
+The aim of this app, is to provide a GUI for admins to easily run scripts, and deliver those scripts to non-technical end users in a simple, non-threating way. :baby_chick:
 
 :floppy_disk: [First Release](https://github.com/jooshkins/SprayBottle/releases) :tada:
 
