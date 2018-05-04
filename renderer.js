@@ -21,7 +21,7 @@ fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
         let noSpaces = name[0].replace(/[\s\(\)]/g, "_"); // needed to avoid jquery err
         if (HomePage == 'index-basic.html') {
             var template = `<tr>
-                <td id="${noSpaces}-sta"><button class="btn btn-primary btn-block" onclick='PoshRun("${file}")'>${name[0]}</button></td>
+                <td id="${noSpaces}-sta"><button class="btn btn-outline-primary btn-block" onclick='PoshRun("${file}")'>${name[0]}</button></td>
               </tr>`
         }
         else {
