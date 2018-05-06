@@ -5,10 +5,12 @@
   <title>SprayBottle - Actions</title>
   <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
   <link rel="stylesheet" href="css/fontawesome-all.css">
+  <link rel="stylesheet" href="css/slider.css">
   <link rel="stylesheet" href="css/default.css">
   <script src="renderer.js"></script>
   <script>
     $(document).ready(function () {
+      LoadScripts();
       Split(["#a", "#b"], {
         direction: "vertical",
         sizes: [50, 40],
@@ -35,13 +37,14 @@
       </li>
     </ul>
   </nav>
-  <div id="a" class="split content container-fluid border border-top-0 border-left-0 border-right-0" style="background-color: #212529">
+  <div id="a" class="bg-very-dark split content container-fluid border border-top-0 border-left-0 border-right-0">
     <table class="table table-sm table-dark">
       <thead>
         <tr>
           <th>Run</th>
           <th>Script</th>
-          <th>Parameters</th>
+          <th class="th-fit">Parameters</th>
+          <th>Admin</th>
           <th>Status</th>
         </tr>
       </thead>

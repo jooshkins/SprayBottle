@@ -1,6 +1,5 @@
 html,
 body {
-  background-color: #343a40;
   height: 100%;
   -webkit-user-select: none;
 }
@@ -17,6 +16,17 @@ body::-webkit-scrollbar {
 #clear {
   margin-bottom: 5px;
 }
+
+.bg-very-dark {
+  background-color: #212529;
+}
+
+.td-fit,
+.th-fit {
+    white-space: nowrap;
+    width: 75%;
+}
+
 /* js splitter */
 .split {
   -webkit-box-sizing: border-box;
@@ -33,31 +43,6 @@ body::-webkit-scrollbar {
 .gutter.gutter-vertical {
   cursor: row-resize;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
-}
-/* End js splitter */
-
-#title-bar {
-  -webkit-app-region: drag;
-}
-
-#title-bar-btns {
-  -webkit-app-region: no-drag;
-  position: fixed;
-  top: 1px;
-  right: 0px;
-}
-
-#title-bar-btns button {
-  height: 32px;
-  width: 32px;
-  background-color: transparent;
-  border: none;
-  color: #f1f1f1;
-  font-size: 16px;
-}
-
-#title-bar-btns button:hover {
-  background-color: #3f3f41;
 }
 
 /* scrollbar styling */

@@ -13,31 +13,31 @@ let ScrDir = store.get('ScriptDir'); // test for null
 let DocDir = store.get('DocDir');
 const HomePage = store.get('HomePage');
 
-// read scripts from dir then create html buttons - combine with doc function
-fs.readdir(ScrDir, (err, dir) => { // !! reduce redundent code
-    let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
-    for (let file of FltrDir) {
-        let name = file.match(/[^./\\]+/); // remove file extension  
-        let noSpaces = name[0].replace(/[\s\(\)]/g, "_"); // needed to avoid jquery err
-        if (HomePage == 'index-basic.html') {
-            var template = `<tr>
-                <td id="${noSpaces}-sta"><button class="btn btn-outline-primary btn-block" onclick='PoshRun("${file}")'>${name[0]}</button></td>
-              </tr>`
+function LoadScripts() {
+    fs.readdir(ScrDir, (err, dir) => {    
+        let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
+        for (let file of FltrDir) {
+            let name = file.match(/[^./\\]+/); // remove file extension  
+            let noSpaces = name[0].replace(/[\s\(\)]/g, "_"); // needed to avoid jquery err
+            if (HomePage == 'index-basic.html') {
+                var template = `<tr>
+                    <td id="${noSpaces}-sta"><button class="btn btn-outline-primary btn-block" onclick='PoshRun("${file}")'>${name[0]}</button></td>
+                </tr>`
+            }
+            else {
+                var template = `<tr>
+                    <td><button id='${name[0]}-btn' class="btn btn-success btn" onclick='PoshRun("${file}")'>»</button></td>
+                    <td><a href="${ScrDir}\\${file}" target="_blank">${name[0]}</td>
+                    <td><input id='${noSpaces}-param' type="text" class="form-control bg-dark text-light" name="param"></td>
+                    <td><label class="switch"><input id="${noSpaces}-adm" type="checkbox"><span class="slider round"></span></label></td>
+                    <td><div id='${noSpaces}-sta' class="text-success text-center"></div></td>
+                </tr>'`;
+            }
+            $('#NoScr').hide();
+            $('#ScriptBin').append(template);
         }
-        else {
-            var template = `<tr>
-                <td><button id='${name[0]}-btn' class="btn btn-success" onclick='PoshRun("${file}")'>»</button></td>
-                <td>${name[0]}</td>
-                <td><input id='${noSpaces}-param' type="text" class="form-control" name="param"></td>
-                <td>
-                  <div id='${noSpaces}-sta' class="text-success text-center"></div>
-                </td>
-              </tr>'`;
-        }
-        $('#NoScr').hide();
-        $('#ScriptBin').append(template);
-    }
-});
+    });
+}
 
 function LoadDocs() { // filter out files with out extension / dirs
     fs.readdir(DocDir, (err, dir) => {
@@ -121,9 +121,11 @@ function PoshRun(file) {
     let noSpaces = name[0].replace(/[\s\(\)]/g, "_");
     let paramName = '#' + noSpaces + '-param';
     let staName = '#' + noSpaces + '-sta';
+    let admName = '#' + noSpaces + '-adm';
     let param = $(paramName).val();
     let Path = ScrDir + '\\' + file;
     let fulPath = Path + ' ' + param;
+    let adm = $(admName).is(':checked');
 
     if (HomePage == 'index-basic.html') {
         var TemplateErr = `<button class="btn btn-danger btn-block" onclick="PoshRun('${file}')">${name[0]} - Failed</button>`;
@@ -142,6 +144,34 @@ function PoshRun(file) {
 
     $(staName).html(TemplateWor) // set status to inprogress
 
+    if (adm) {
+        // works with windows, and does not produce extra terminal window, does not catch errors if errorlevel 1 (exit /b %errorlevel%)
+        let fulPath = 'powershell.exe ' + Path + ' ' + param;  
+        var sudo = require('sudo-prompt');
+        var options = {
+        name: 'SprayBottle',
+        };
+        sudo.exec(fulPath, options,
+        function(error, stdout, stderr) { 
+            if (error) {
+                let msg =  error + '<br>';
+                $('#console').append('error is:' + msg);
+                $(staName).html('<div class="text-danger text-center"><i class="fas fa-times fa-2x"></i>') 
+            } 
+            if (stdout) {
+                let msg = stdout + '<br>';
+                $('#console').append(msg);
+                $(staName).html('<i class="fas fa-check-square fa-2x"></i>')
+            }
+            if (stderr) {
+                let msg = stderr + '<br>';
+                $('#console').append(msg);
+                $(staName).html('<div class="text-danger text-center"><i class="fas fa-times fa-2x"></i>')
+            }
+        });
+    } 
+
+    else {
     var cmd = fulPath;
     console.log(cmd);
     let ps = new powershell(cmd, {
@@ -169,6 +199,5 @@ function PoshRun(file) {
         $('#console').append(msg);
         $(staName).html(TemplateErr);
     });
+    } 
 };
-
-

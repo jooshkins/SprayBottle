@@ -1,0 +1,23 @@
+#title-bar {
+  -webkit-app-region: drag;
+}
+
+#title-bar-btns {
+  -webkit-app-region: no-drag;
+  position: fixed;
+  top: 1px;
+  right: 0px;
+}
+
+#title-bar-btns button {
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  border: none;
+  color: #f1f1f1;
+  font-size: 16px;
+}
+
+#title-bar-btns button:hover {
+  background-color: #3f3f41;
+}
