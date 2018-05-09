@@ -9,7 +9,6 @@ body::-webkit-scrollbar {
 }
 
 #a {
-  padding-right: 0px;
   padding-bottom: 0px;
 }
 
@@ -19,6 +18,19 @@ body::-webkit-scrollbar {
 
 .bg-very-dark {
   background-color: #212529;
+}
+
+.btn-very-dark {
+  background-color: #212529;
+}
+.btn-very-dark:hover {
+  background-color: #343a40;
+}
+.btn-very-dark::selection {
+  background-color: #343a40;
+}
+.btn-very-dark:focus {
+  background-color: #343a40;
 }
 
 .td-fit,

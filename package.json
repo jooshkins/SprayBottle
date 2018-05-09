@@ -1,6 +1,6 @@
 {
   "name": "spraybottle",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A cross platform tool for supercharging your scripts, and delivering them to end-users.",
   "main": "main.js",
   "scripts": {

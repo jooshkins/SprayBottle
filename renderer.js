@@ -4,16 +4,18 @@
 const $ = require('jquery');
 const powershell = require('powershell');
 const fs = require("fs"); // for file system stuff
-const { shell } = require('electron');
 const Store = require('electron-store'); // user settings
 const store = new Store();
 const os = require('os'); // OS info
 const Split = require('split.js'); // splitter module for multi panes
-let ScrDir = store.get('ScriptDir'); // test for null
-let DocDir = store.get('DocDir');
 const HomePage = store.get('HomePage');
 
-function LoadScripts() {
+function LoadScripts(clr) {
+    if (clr) {
+        $('#ScriptBin').html('');
+        $('#NoScr').show()
+    }
+    let ScrDir = store.get('ScriptDir');
     fs.readdir(ScrDir, (err, dir) => {    
         let FltrDir = dir.filter(CheckIfPs1); //filter out non script files
         for (let file of FltrDir) {
@@ -40,6 +42,7 @@ function LoadScripts() {
 }
 
 function LoadDocs() { // filter out files with out extension / dirs
+    let DocDir = store.get('DocDir');
     fs.readdir(DocDir, (err, dir) => {
         let FltrDir = dir.filter(CheckIfFile);
         for (let file of FltrDir) {
@@ -62,27 +65,43 @@ function CheckIfFile(file) {
     return file.match(/.+\.\b/);
 }
 
+$(document).on('change', ':file', function() {
+    let id = $(this).attr('id');
+    console.log(id);
+    let selPath = document.getElementById(id).files[0].path;
+    $(this).parent().next().val(selPath); 
+});
+
 // for Saving path from settings page
 function SetScriptDir() { // !! reduce redundent code
-    let dir = document.getElementById("ScriptDir").files[0].path;
+    let dir = $("#ReadPathScript").val()
     store.set('ScriptDir', dir);
     GetDirs(); // reload path after applying
 }
 
 function SetDocDir() {  // !! reduce redundent code
-    let dir = document.getElementById("DocDir").files[0].path;
+    let dir = $("#ReadPathDoc").val()
     store.set('DocDir', dir);
     GetDirs();  // reload path after applying
 }
 
+function SetScriptDirAndLoad() { // !! reduce redundent code
+    let dir = $("#ReadPathScript").val()
+    store.set('ScriptDir', dir);
+    GetDirs(); // reload path after applying
+    let clr = true;
+    LoadScripts(clr);
+}
+
 function GetDirs() {
-    $("#ReadPathScript").html(store.get('ScriptDir'));
-    $("#ReadPathDoc").html(store.get('DocDir'));
+    $("#ReadPathScriptLabel").html(store.get('ScriptDir'));
+    $("#ReadPathScript").val(store.get('ScriptDir'));
+    $("#ReadPathDocLabel").html(store.get('DocDir'));
+    $("#ReadPathDoc").val(store.get('DocDir'));
 }
 
 function SetHomePage(page) {  // !! reduce redundent code
     store.set('HomePage', page);
-    console.log('homepage: ' + page);
 }
 
 function ClearConsole() {
@@ -117,6 +136,7 @@ function LoadSettingsNav() {
 }
 
 function PoshRun(file) {
+    let ScrDir = store.get('ScriptDir');
     let name = file.match(/[^./\\]+/);
     let noSpaces = name[0].replace(/[\s\(\)]/g, "_");
     let paramName = '#' + noSpaces + '-param';
@@ -145,7 +165,6 @@ function PoshRun(file) {
     $(staName).html(TemplateWor) // set status to inprogress
 
     if (adm) {
-        // works with windows, and does not produce extra terminal window, does not catch errors if errorlevel 1 (exit /b %errorlevel%)
         let fulPath = 'powershell.exe ' + Path + ' ' + param;  
         var sudo = require('sudo-prompt');
         var options = {

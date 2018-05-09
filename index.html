@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>SprayBottle - Actions</title>
@@ -10,6 +11,7 @@
   <script src="renderer.js"></script>
   <script>
     $(document).ready(function () {
+      GetDirs();
       LoadScripts();
       Split(["#a", "#b"], {
         direction: "vertical",
@@ -20,6 +22,7 @@
     });
   </script>
 </head>
+
 <body class="bg-dark">
   <nav class="navbar navbar-expand-sm bg-dark navbar-dark shadow-lg">
     <ul class="navbar-nav">
@@ -38,6 +41,14 @@
     </ul>
   </nav>
   <div id="a" class="bg-very-dark split content container-fluid border border-top-0 border-left-0 border-right-0">
+    <label class="btn-group btn-group-sm btn-block m-0">
+      <span class="btn btn-very-dark text-light border border-secondary p-1 m-0">
+        Browse&hellip;
+        <input id="ScriptDir" type="file" style="display: none;" webkitdirectory="" directory="">
+      </span>
+      <input id="ReadPathScript" type="text" class="form-control border-secondary rounded-0 btn-very-dark text-light p-0">
+      <button class="btn btn-very-dark text-light border border-secondary p-1" onclick="SetScriptDirAndLoad()" type=button>Apply</button>
+    </label>
     <table class="table table-sm table-dark">
       <thead>
         <tr>
@@ -52,8 +63,8 @@
       </tbody>
     </table>
     <div id="NoScr" class="alert alert-secondary">
-        <strong>No scripts.</strong> Select a script folder in
-        <a href="settings.html" class="alert-link">settings</a> or check folder for valid scripts.
+      <strong>No scripts.</strong> Select a script folder in
+      <a href="settings.html" class="alert-link">settings</a> or check folder for valid scripts.
     </div>
   </div>
   <div id="b" class "split content">
@@ -69,4 +80,5 @@
     </div>
   </div>
 </body>
+
 </html>

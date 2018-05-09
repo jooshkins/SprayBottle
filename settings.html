@@ -26,22 +26,28 @@
   <div class="container-fluid text-light" class="bg-very-dark">
     <div>
       <label>Scripts Folder:
-        <span id="ReadPathScript" class="text-muted"></span>
+        <span id="ReadPathScriptLabel" class="text-muted"></span>
       </label>
     </div>
-    <div class="btn-group">
-      <input type="file" id="ScriptDir" class="btn btn-primary btn-fill" webkitdirectory="" directory="" />
+    <label class="btn-group">
+      <span class="btn btn-primary">
+        Browse&hellip; <input id="ScriptDir" type="file" style="display: none;" webkitdirectory="" directory=""/>
+      </span>
+      <input id="ReadPathScript" type="text" class="form-control rounded-0 bg-secondary text-light">
       <button class="btn btn-warning" onclick="SetScriptDir()" type=button>Apply</button>
-    </div>
+   </label>
     <div>
       <label>Document Folder:
-        <span id="ReadPathDoc" class="text-muted"></span>
+        <span id="ReadPathDocLabel" class="text-muted"></span>
       </label>
     </div>
-    <div class="btn-group">
-      <input type="file" id="DocDir" class="btn btn-primary btn-fill" webkitdirectory="" directory="" />
+    <label class="btn-group">
+      <span class="btn btn-primary">
+        Browse&hellip; <input id="DocDir" type="file" style="display: none;" webkitdirectory="" directory=""/>
+      </span>
+      <input id="ReadPathDoc" type="text" class="form-control rounded-0 bg-secondary text-light">
       <button class="btn btn-warning" onclick="SetDocDir()" type=button>Apply</button>
-    </div>
+   </label>
     <hr>
     <div>
       <label>Self Service mode for end users - hide settings and admin options</label>
