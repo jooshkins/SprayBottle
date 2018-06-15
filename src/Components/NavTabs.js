@@ -1,11 +1,10 @@
 import React from 'react'
 import { Tab, Tabs, TabId, Navbar, Alignment, Icon, Button } from "@blueprintjs/core";
 import '@blueprintjs/core/lib/css/blueprint.css';
-
 import ScriptTable from './ScriptTable';
 import ScriptTableSimple from './ScriptTableSimple';
 import DocumentButtons from './DocumentButtons';
-import Settings from './Settings';
+import Settings from './Settings';  
 
 const Store = window.require('electron-store');
 const store = new Store();
@@ -15,7 +14,7 @@ const selectTable = () => {
         return <ScriptTableSimple />
     }
     else {
-        return <ScriptTable />
+        return <ScriptTable/>
     }
 }
 
@@ -46,7 +45,7 @@ class NavTabs extends React.Component {
     render() {
         return (
             <div>
-                <Navbar>
+                <Navbar fixedToTop={false}>
                     <Navbar.Group>
                         <Tabs
                             animate={this.state.animate}

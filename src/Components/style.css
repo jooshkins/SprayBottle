@@ -1,6 +1,7 @@
 html,
 body {
   -webkit-user-select: none;
+  background-color: #293742;
 }
 
 body::-webkit-scrollbar {
@@ -31,24 +32,43 @@ body::-webkit-scrollbar {
 ::-webkit-scrollbar {
     width: 10px; /* 1px wider than Lion. */
     /* This is more usable for users trying to click it. */
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(255, 255, 255, 0);
     -webkit-border-radius: 100px;
   }
   /* hover effect for both scrollbar area, and scrollbar 'thumb' */
   ::-webkit-scrollbar:hover {
-    background-color: rgba(0, 0, 0, 0.09);
+    background-color: rgba(255, 255, 255, 0.09);
   }
   
   /* The scrollbar 'thumb' ...that marque oval shape in a scrollbar */
   ::-webkit-scrollbar-thumb:vertical {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.5);
     -webkit-border-radius: 100px;
     background-clip: padding-box;
     border: 2px solid rgba(0, 0, 0, 0);
     min-height: 10px; /*Prevent it from getting too small */
   }
   ::-webkit-scrollbar-thumb:vertical:active {
-    background: rgba(0, 0, 0, 0.61); /* Some darker color when you click it */
+    background: rgba(255, 255, 255, 0.61); /* Some darker color when you click it */
     -webkit-border-radius: 100px;
   }
+
+  /* The scrollbar 'thumb' ...that marque oval shape in a scrollbar */
+  ::-webkit-scrollbar-thumb:horizontal {
+    background: rgba(255, 255, 255, 0.5);
+    -webkit-border-radius: 100px;
+    background-clip: padding-box;
+    border: 2px solid rgba(0, 0, 0, 0);
+    min-height: 10px; /*Prevent it from getting too small */
+  }
+  ::-webkit-scrollbar-thumb:horizontal:active {
+    background: rgba(255, 255, 255, 0.61); /* Some darker color when you click it */
+    -webkit-border-radius: 100px;
+  }
+
+
   /* scrollbar styling END */
+
+  .ReactTable .-pagination .-btn {
+    color: rgb(255, 255, 255);
+  }

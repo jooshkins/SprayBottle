@@ -10,8 +10,10 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow( {
-    width: 900, 
+    width: 800, 
     height: 680,
+    minWidth: 400,
+    minHeight: 360,
     frame: false,
     autoHideMenuBar: true,
     webPreferences: { // allow plugins e.g. pdf viewer

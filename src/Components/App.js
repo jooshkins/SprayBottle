@@ -3,8 +3,6 @@ import { TitleBar } from './Titlebar/lib/index.js';
 import { Colors, FocusStyleManager } from "@blueprintjs/core";
 
 import ScriptTable from './ScriptTable.js';
-import ConsoleLog from './ConsoleLog.js';
-import SettingsDialog from './SettingsDialog.js';
 import NavTabs from './NavTabs.js';
 
 import './style.css';

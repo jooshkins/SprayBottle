@@ -1,12 +1,14 @@
 import React from 'react'
-import { Table, Column, SelectionModes } from '@blueprintjs/table';
-import { Button, Intent } from '@blueprintjs/core';
+import { Button, Text, Switch, Intent, Alignment, Icon, Popover, Tooltip, Position, Spinner } from '@blueprintjs/core';
 import ScriptStatus from './ScriptStatus'
 import '@blueprintjs/core/lib/css/blueprint.css';
-import '@blueprintjs/table/lib/css/table.css';
+
+import ReactTable from "react-table";
+import 'react-table/react-table.css'
 
 const electron = window.require('electron');
 const powershell = electron.remote.require('powershell');
+const sudo = electron.remote.require('sudo-prompt');
 const fs = window.require("fs");
 
 const Store = window.require('electron-store');
@@ -16,27 +18,36 @@ const CheckIfPs1 = (file) => {
     return file.match(/.+\.ps1\b/);
 }
 
-class ScriptTableSimple extends React.Component {
+class ScriptTable extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            scripts: '',
-            scriptLog: '',
-            scriptStatus: '',
-            colWidth: [100, 100, 100],
+            scripts: [],
             scriptPath: store.get('scriptPath'),
         }
         this.runPosh = this.runPosh.bind(this);
-        this.updateArray = this.updateArray.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.updateScripts = this.updateScripts.bind(this);
+        this.updateTableHeight = this.updateTableHeight.bind(this);
 
         if (this.state.scriptPath != undefined) {
             fs.readdir(this.state.scriptPath, (err, dir) => {
                 if (dir != undefined) {
                     let files = dir.filter(CheckIfPs1);
+                    let scriptsCopy = this.state.scripts.slice(0);
+
+                    for (let file of files) {
+                        let script = {
+                            name: file,
+                            param: '',
+                            adm: false,
+                            status: '',
+                            log: []
+                        }
+                        scriptsCopy.push(script)
+                    };
                     this.setState({
-                        scripts: files,
-                        scriptLog: new Array(files.length),
-                        scriptStatus: new Array(files.length),
+                        scripts: scriptsCopy
                     })
                 }
             });
@@ -44,144 +55,182 @@ class ScriptTableSimple extends React.Component {
     };
 
     componentDidMount() {
-        this.updateColumnWidth();
-        window.addEventListener('resize', this.updateColumnWidth);
+        this.updateTableHeight();
+        window.addEventListener('resize', this.updateTableHeight);
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.updateColumnWidth);
+        window.removeEventListener('resize', this.updateTableHeight);
     }
 
-    updateColumnWidth() {
-        let firstCol = (10 / 100) * window.innerWidth;
-        let secondCol = (80 / 100) * window.innerWidth;
-        let thirdCol = (10 / 100) * window.innerWidth;
-        let arr = [firstCol, secondCol, thirdCol]
-        this.setState({ colWidth: arr});
+    updateTableHeight() {
+        let height = window.innerHeight - 80;
+        this.setState({ tableHeight: height });
+    }
+
+    updateScripts(id, prop, data, add) {
+        if (add) {
+            let scripts = [...this.state.scripts];
+            scripts[id][prop].push(data)
+            this.setState({ scripts })
+        } else {
+            let scripts = [...this.state.scripts];
+            scripts[id][prop] = data
+            this.setState({ scripts })
+        }
     }
 
     runPosh(id, event) {
-        this.updateArray(id, this.state.scriptStatus, '', 'working');
+        this.updateScripts(id, 'status', 'working')
+        this.updateScripts(id, 'log', [])
 
-        let cmd = `${this.state.scriptPath}/${this.state.scripts[id]}`;
+        let cmd = `${this.state.scriptPath}/${this.state.scripts[id].name} '${this.state.scripts[id].param}'`;
 
+        if (this.state.scripts[id].adm) {
+            let admCmd = `powershell.exe ${cmd}`
+            let options = { name: 'SprayBottle' };
+            let scripts = [...this.state.scripts];
+            let updateScripts = this.updateScripts;
+
+            let result = sudo.exec(admCmd, options,
+                function (error, stdout, stderr) {
+                    if (error) {
+                        updateScripts(id, 'log', error.message, true)
+                        updateScripts(id, 'status', 'error')
+                    }
+                    if (stdout) {
+                        updateScripts(id, 'log', stdout, true)
+                        updateScripts(id, 'status', 'success')
+                    }
+                    if (stderr) {
+                        updateScripts(id, 'log', stderr, true)
+                        updateScripts(id, 'status', 'error')
+                    }
+                },
+            );
+        }
+
+        else {
             let ps = new powershell(cmd, {
                 executionPolicy: 'Bypass',
                 noProfile: true,
             })
             ps.on("error", err => {
                 if (err) {
-                    this.updateArray(id, this.state.scriptLog, err)
-                    this.updateArray(id, this.state.scriptStatus, '', 'error')
+                    this.updateScripts(id, 'log', err, true)
+                    this.updateScripts(id, 'status', 'error')
                 }
             });
             ps.on("output", data => {
                 if (data) {
-                    this.updateArray(id, this.state.scriptLog, data)
-                    this.updateArray(id, this.state.scriptStatus, '', 'success')
+                    this.updateScripts(id, 'log', data, true)
+                    this.updateScripts(id, 'status', 'success')
                 }
             });
             ps.on("error-output", data => {
                 if (data) {
-                    this.updateArray(id, this.state.scriptLog, data)
-                    this.updateArray(id, this.state.scriptStatus, '', 'error')
+                    this.updateScripts(id, 'log', data, true)
+                    this.updateScripts(id, 'status', 'error')
                 }
             });
-         event.preventDefault();
+        }
+        event.preventDefault();
     }
 
-    updateArray(id, arr, data, msg) {
-        if (msg){
-            let newArr = arr
-            newArr.splice(id, 1, msg);
-            this.setState({arr: newArr})
+    handleChange(event) {
+        if (event.target.type == "text") {
+            this.updateScripts(event.target.id, 'param', event.target.value)
         }
         else {
-            let newArr = arr
-            newArr.splice(id, 1, data);
-            this.setState({arr: newArr})
+            this.updateScripts(event.target.id, 'adm', event.target.checked)
         }
     }
 
     render() {
-        const cellRendererRun = (rowIndex) => {
-            return (
-                <Button 
-                icon="play" 
-                intent={Intent.PRIMARY} 
-                minimal={true} 
-                onClick={this.runPosh.bind(this, rowIndex)} 
-                />
-            );
-        };
-        const cellRendererScript = (rowIndex) => {
-            return (
-                <div>
-                    {this.state.scripts[rowIndex]}
-                </div>
-            );
-        };
-        const cellRendererStatus = (rowIndex) => {
-            let log = this.state.scriptLog[rowIndex];
+        const cellRendererStatus = (cellInfo) => {
+            let log = this.state.scripts[cellInfo.index].log;
 
-            switch(this.state.scriptStatus[rowIndex]) {
+            switch (cellInfo.value) {
                 case 'working':
                     return (
                         <div>
                             <ScriptStatus
-                            mode="spinner"
-                            content={log}
+                                mode="spinner"
+                                content={log}
                             />
                         </div>
                     );
-                break;
+                    break;
                 case 'success':
                     return (
                         <div>
                             <ScriptStatus
-                            mode="icon"
-                            content={log}
-                            icon="info-sign"
-                            intent={Intent.SUCCESS}
+                                mode="icon"
+                                content={log}
+                                icon="tick-circle"
+                                intent={Intent.SUCCESS}
                             />
                         </div>
                     );
-                break;
+                    break;
                 case 'error':
                     return (
                         <div>
                             <ScriptStatus
-                            mode="icon"
-                            content={log}
-                            icon="error"
-                            intent={Intent.DANGER}
+                                mode="icon"
+                                content={log}
+                                icon="warning-sign"
+                                intent={Intent.DANGER}
                             />
                         </div>
                     );
-                break;
+                    break;
                 default:
                     return (<div></div>);
             }
         };
+
+        const columns = [
+            {
+            Header: 'Run',
+            width: 80,
+            maxWidth: 80,
+            Cell: props =>
+                <Button
+                    id={props.index}
+                    icon="play"
+                    intent={Intent.SUCCESS}
+                    fill={true}
+                    minimal={false}
+                    onClick={this.runPosh.bind(this, props.index)}
+                />
+        }, {
+            Header: 'Script',
+            accessor: 'name',
+            Cell: props =>
+                <div>
+                    {props.value}
+                </div>
+        }, {
+            Header: 'Status',
+            accessor: 'status',
+            Cell: cellRendererStatus
+        }
+    ]
         return (
-            <Table
-            numRows={this.state.scripts.length}
-            defaultRowHeight={40}
-            enableMultipleSelection={false}
-            enableRowHeader={false}
-            enableRowResizing={false}
-            enableColumnResizing={false}
-            enableColumnReordering={false}
-            selectionModes={SelectionModes.NONE}
-            columnWidths={this.state.colWidth}
-            style={{ width: "100%" }}
-            >
-                <Column name="Run" cellRenderer={cellRendererRun} />
-                <Column name="Script" cellRenderer={cellRendererScript} />
-                <Column name="Status" cellRenderer={cellRendererStatus} />
-            </Table>
+            <ReactTable
+                resizable={false}
+                data={this.state.scripts}
+                columns={columns}
+                defaultPageSize={20}
+                noDataText="No scripts detected."
+                style={{
+                  height: this.state.tableHeight, 
+                }}
+                className="-striped react-table"
+            />
         );
     }
 }
 
-export default ScriptTableSimple;
+export default ScriptTable;
