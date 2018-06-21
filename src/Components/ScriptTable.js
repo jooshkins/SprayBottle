@@ -22,35 +22,42 @@ class ScriptTable extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            scripts: [],
+            scripts: store.get('scripts', []),
             scriptPath: store.get('scriptPath'),
+            scriptPathMTime: store.get('scriptPathMTime', 0)
         }
         this.runPosh = this.runPosh.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.updateScripts = this.updateScripts.bind(this);
         this.updateTableHeight = this.updateTableHeight.bind(this);
 
-        if (this.state.scriptPath != undefined) {
-            fs.readdir(this.state.scriptPath, (err, dir) => {
-                if (dir != undefined) {
-                    let files = dir.filter(CheckIfPs1);
-                    let scriptsCopy = this.state.scripts.slice(0);
-
-                    for (let file of files) {
-                        let script = {
-                            name: file,
-                            param: '',
-                            adm: false,
-                            status: '',
-                            log: []
+        if (this.state.scriptPath != undefined) { // if script path is set
+            fs.stat(this.state.scriptPath, (err, stats) => {
+                if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed 
+                    fs.readdir(this.state.scriptPath, (err, dir) => {
+                        if (dir != undefined) { // if folder actually exists
+                            let files = dir.filter(CheckIfPs1);
+                            let scriptsCopy = this.state.scripts.slice(0);
+        
+                            for (let file of files) {
+                                let script = {
+                                    name: file,
+                                    param: '',
+                                    adm: false,
+                                    status: '',
+                                    log: []
+                                }
+                                scriptsCopy.push(script)
+                            };
+                            this.setState({
+                                scripts: scriptsCopy
+                            })
+                            store.set('scripts', scriptsCopy)
                         }
-                        scriptsCopy.push(script)
-                    };
-                    this.setState({
-                        scripts: scriptsCopy
-                    })
+                    });
+                    store.set('scriptPathMTime', stats.mtimeMs)
                 }
-            });
+            })
         }
     };
 
@@ -73,17 +80,18 @@ class ScriptTable extends React.Component {
             let scripts = [...this.state.scripts];
             scripts[id][prop].push(data)
             this.setState({ scripts })
+            store.set('scripts', scripts)
         } else {
             let scripts = [...this.state.scripts];
             scripts[id][prop] = data
             this.setState({ scripts })
+            store.set('scripts', scripts) 
         }
     }
 
     runPosh(id, event) {
         this.updateScripts(id, 'status', 'working')
         this.updateScripts(id, 'log', [])
-
         let cmd = `${this.state.scriptPath}/${this.state.scripts[id].name} '${this.state.scripts[id].param}'`;
 
         if (this.state.scripts[id].adm) {
@@ -149,7 +157,6 @@ class ScriptTable extends React.Component {
     render() {
         const cellRendererStatus = (cellInfo) => {
             let log = this.state.scripts[cellInfo.index].log;
-
             switch (cellInfo.value) {
                 case 'working':
                     return (
@@ -192,55 +199,55 @@ class ScriptTable extends React.Component {
 
         const columns = [
             {
-            Header: 'Run',
-            width: 60,
-            Cell: props =>
-                <Button
-                    id={props.index}
-                    icon="play"
-                    intent={Intent.SUCCESS}
-                    fill={true}
-                    minimal={true}
-                    onClick={this.runPosh.bind(this, props.index)}
-                />
-        }, {
-            Header: 'Script',
-            accessor: 'name',
-            Cell: props =>
-                <a
-                    href={this.state.scriptPath + '\\' + props.value}
-                    target="_blank">{props.value}
-                </a>
-        }, {
-            Header: 'Parameter',
-            accessor: 'param',
-            Cell: props =>
-                <input className="pt-input pt-fill"
-                    id={props.index}
-                    value={props.value}
-                    onChange={this.handleChange}
-                    type="text"
-                    placeholder="Enter Parameters..."
-                />
-        }, {
-            Header: 'Admin',
-            width: 60,
-            accessor: 'adm',
-            Cell: props =>
-                <Switch
-                    id={props.index}
-                    large={true}
-                    style={{ marginTop: 5 }}
-                    checked={props.value}
-                    onChange={this.handleChange}
-                />
-        }, {
-            Header: 'Status',
-            width: 60,
-            accessor: 'status',
-            Cell: cellRendererStatus
-        }
-    ]
+                Header: 'Run',
+                width: 60,
+                Cell: props =>
+                    <Button
+                        id={props.index}
+                        icon="play"
+                        intent={Intent.SUCCESS}
+                        fill={true}
+                        minimal={true}
+                        onClick={this.runPosh.bind(this, props.index)}
+                    />
+            }, {
+                Header: 'Script',
+                accessor: 'name',
+                Cell: props =>
+                    <a
+                        href={this.state.scriptPath + '\\' + props.value}
+                        target="_blank">{props.value}
+                    </a>
+            }, {
+                Header: 'Parameter',
+                accessor: 'param',
+                Cell: props =>
+                    <input className="pt-input pt-fill"
+                        id={props.index}
+                        value={props.value}
+                        onChange={this.handleChange}
+                        type="text"
+                        placeholder="Enter Parameters..."
+                    />
+            }, {
+                Header: 'Admin',
+                width: 60,
+                accessor: 'adm',
+                Cell: props =>
+                    <Switch
+                        id={props.index}
+                        large={true}
+                        style={{ marginTop: 5 }}
+                        checked={props.value}
+                        onChange={this.handleChange}
+                    />
+            }, {
+                Header: 'Status',
+                width: 60,
+                accessor: 'status',
+                Cell: cellRendererStatus
+            }
+        ]
         return (
             <ReactTable
                 data={this.state.scripts}
@@ -248,7 +255,7 @@ class ScriptTable extends React.Component {
                 defaultPageSize={20}
                 noDataText="No scripts detected."
                 style={{
-                  height: this.state.tableHeight, 
+                    height: this.state.tableHeight,
                 }}
                 className="-striped react-table"
             />

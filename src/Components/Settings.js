@@ -33,6 +33,8 @@ class Settings extends React.Component {
     handleRadioChange(event) {
         this.setState({radioValue: event.currentTarget.value})
         store.set('mode', event.currentTarget.value)
+        store.delete('scripts'); // delete scripts object
+        store.delete('scriptPathMTime') // delete folder modify time
     }
 
     handleChangeBrowseScript(event) {
@@ -45,6 +47,8 @@ class Settings extends React.Component {
     }
     handleClickScript(event) {
         store.set('scriptPath', this.state.scriptPath);
+        store.delete('scripts'); // delete scripts object
+        store.delete('scriptPathMTime') // delete folder modify time
     }
 
     handleChangeBrowseDoc(event) {
