@@ -1,8 +1,9 @@
 import React from 'react'
-import { Button, Text, Switch, Intent, Alignment, Icon, Popover, Tooltip, Position, Spinner } from '@blueprintjs/core';
+import { Button, ButtonGroup, Switch, Intent, Checkbox} from '@blueprintjs/core';
 import ScriptStatus from './ScriptStatus'
+import AddScriptButtonSimple from './AddScriptButtonSimple'
 import '@blueprintjs/core/lib/css/blueprint.css';
-
+import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import ReactTable from "react-table";
 import 'react-table/react-table.css'
 
@@ -10,7 +11,6 @@ const electron = window.require('electron');
 const powershell = electron.remote.require('powershell');
 const sudo = electron.remote.require('sudo-prompt');
 const fs = window.require("fs");
-
 const Store = window.require('electron-store');
 const store = new Store();
 
@@ -22,30 +22,45 @@ class ScriptTable extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            runList: [],
+            lastRun: 0,
             scripts: store.get('scripts', []),
             scriptPath: store.get('scriptPath'),
             scriptPathMTime: store.get('scriptPathMTime', 0)
         }
+        this.loadScripts = this.loadScripts.bind(this);
         this.runPosh = this.runPosh.bind(this);
+        this.runBatch = this.runBatch.bind(this);
+        this.updateBatch = this.updateBatch.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.updateScripts = this.updateScripts.bind(this);
         this.updateTableHeight = this.updateTableHeight.bind(this);
+        this.updateTablePageSize = this.updateTablePageSize.bind(this);
+        this.clearTable = this.clearTable.bind(this);
+        this.addScript = this.addScript.bind(this);
 
-        if (this.state.scriptPath != undefined) { // if script path is set
+        this.loadScripts()
+    };
+
+    loadScripts() {
+        if (this.state.scriptPath !== undefined) { // if script path is set
             fs.stat(this.state.scriptPath, (err, stats) => {
                 if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed 
                     fs.readdir(this.state.scriptPath, (err, dir) => {
-                        if (dir != undefined) { // if folder actually exists
+                        if (dir !== undefined) { // if folder actually exists
                             let files = dir.filter(CheckIfPs1);
+                            store.set('numFiles', files.length); // re-add file count just in case
                             let scriptsCopy = this.state.scripts.slice(0);
         
                             for (let file of files) {
                                 let script = {
+                                    bat: false,
                                     name: file,
                                     param: '',
                                     adm: false,
                                     status: '',
-                                    log: []
+                                    log: [],
+                                    path: this.state.scriptPath + '\\' + file
                                 }
                                 scriptsCopy.push(script)
                             };
@@ -59,7 +74,29 @@ class ScriptTable extends React.Component {
                 }
             })
         }
-    };
+    }
+
+    updateTableHeight() {
+        let height = window.innerHeight - 110;
+        this.setState({ tableHeight: height });
+    }
+
+    updateTablePageSize() {
+        let n = store.get('numFiles', 0)
+        let p;
+        if (n === 0) {
+            p = 100
+        } else if (n <= 10 && n !== 0) {
+            p = 10
+        } else {
+            p = n + 1;
+        }
+        this.setState({pageSize: p})
+    }
+
+    componentWillMount() {
+        this.updateTablePageSize();
+    }
 
     componentDidMount() {
         this.updateTableHeight();
@@ -68,11 +105,6 @@ class ScriptTable extends React.Component {
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.updateTableHeight);
-    }
-
-    updateTableHeight() {
-        let height = window.innerHeight - 80;
-        this.setState({ tableHeight: height });
     }
 
     updateScripts(id, prop, data, add) {
@@ -89,18 +121,19 @@ class ScriptTable extends React.Component {
         }
     }
 
-    runPosh(id, event) {
+    runPosh(id, list, event) {
         this.updateScripts(id, 'status', 'working')
         this.updateScripts(id, 'log', [])
-        let cmd = `${this.state.scriptPath}/${this.state.scripts[id].name} '${this.state.scripts[id].param}'`;
+        let run = this.state.lastRun;
+        let cmd = `${this.state.scripts[id].path} '${this.state.scripts[id].param}'`;
 
         if (this.state.scripts[id].adm) {
             let admCmd = `powershell.exe ${cmd}`
             let options = { name: 'SprayBottle' };
-            let scripts = [...this.state.scripts];
             let updateScripts = this.updateScripts;
+            let updateBatch = this.updateBatch;
 
-            let result = sudo.exec(admCmd, options,
+            sudo.exec(admCmd, options,
                 function (error, stdout, stderr) {
                     if (error) {
                         updateScripts(id, 'log', error.message, true)
@@ -109,6 +142,7 @@ class ScriptTable extends React.Component {
                     if (stdout) {
                         updateScripts(id, 'log', stdout, true)
                         updateScripts(id, 'status', 'success')
+                        updateBatch(run, list)
                     }
                     if (stderr) {
                         updateScripts(id, 'log', stderr, true)
@@ -133,6 +167,7 @@ class ScriptTable extends React.Component {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
                     this.updateScripts(id, 'status', 'success')
+                    this.updateBatch(run, list)
                 }
             });
             ps.on("error-output", data => {
@@ -142,15 +177,74 @@ class ScriptTable extends React.Component {
                 }
             });
         }
-        event.preventDefault();
+        if (event) {event.preventDefault();}
+    }
+
+    runBatch() {
+        let list = [];
+        this.state.scripts.map((script, i) => {
+            if (script.bat) {
+                list.push(i);
+                }
+            }
+        );
+        if (list.length > 0) {
+            this.setState({runList: list})
+            this.runPosh(list[0], list)
+        }
+    }
+
+    updateBatch(run, list) {
+        run ++
+        if (list.length > run) {
+            this.setState({lastRun: run});
+            this.runPosh(list[run], list);
+        } else if (list.length === run) {
+            this.setState({lastRun: 0})
+            this.setState({runList: []})
+        }
     }
 
     handleChange(event) {
-        if (event.target.type == "text") {
+        if (event.target.type === "text") {
             this.updateScripts(event.target.id, 'param', event.target.value)
-        }
-        else {
-            this.updateScripts(event.target.id, 'adm', event.target.checked)
+        } else if (event.target.id.match(/adm-/g)) {
+            let id = event.target.id.slice(4)
+            this.updateScripts(id, 'adm', event.target.checked)
+        } else if (event.target.id.match(/bat-/g)) {
+            let id = event.target.id.slice(4)
+            this.updateScripts(id, 'bat', event.target.checked)
+        } 
+    }
+
+    clearTable() {
+        let scripts = [];
+        this.state.scripts.map((script) => {
+                script.bat = false;
+                script.param =  '';
+                script.adm = false;
+                script.status = '';
+                scripts.push(script);
+            }
+        );
+        store.set('scripts', scripts)
+        this.setState({ scripts })
+    }
+
+    addScript(event) {
+        if (event.target.files.length > 0) {
+            let script = {
+                name: event.target.files[0].name,
+                param: '',
+                adm: false,
+                status: '',
+                log: [],
+                path: event.target.files[0].path
+            }
+            let scripts = [...this.state.scripts];
+            scripts.push(script)
+            this.setState({ scripts })
+            store.set('scripts', scripts)
         }
     }
 
@@ -199,17 +293,17 @@ class ScriptTable extends React.Component {
 
         const columns = [
             {
-                Header: 'Run',
+                Header: 'Select',
                 width: 60,
+                accessor: 'bat',
                 Cell: props =>
-                    <Button
-                        id={props.index}
-                        icon="play"
-                        intent={Intent.SUCCESS}
-                        fill={true}
-                        minimal={true}
-                        onClick={this.runPosh.bind(this, props.index)}
-                    />
+                <Checkbox
+                    id={'bat-' + props.index}
+                    checked={props.value}
+                    style={{ marginTop: 5, marginLeft: 5}}
+                    onChange={this.handleChange}
+                    large={true}
+                />
             }, {
                 Header: 'Script',
                 accessor: 'name',
@@ -235,7 +329,7 @@ class ScriptTable extends React.Component {
                 accessor: 'adm',
                 Cell: props =>
                     <Switch
-                        id={props.index}
+                        id={'adm-' + props.index}
                         large={true}
                         style={{ marginTop: 5 }}
                         checked={props.value}
@@ -249,16 +343,38 @@ class ScriptTable extends React.Component {
             }
         ]
         return (
-            <ReactTable
-                data={this.state.scripts}
-                columns={columns}
-                defaultPageSize={20}
-                noDataText="No scripts detected."
-                style={{
-                    height: this.state.tableHeight,
-                }}
-                className="-striped react-table"
-            />
+            <div>
+                <ButtonGroup> 
+                    <Button
+                    text="Run"
+                    onClick={this.runBatch}
+                    icon="play"
+                    minimal={true}
+                    intent={Intent.SUCCESS}
+                    />
+                    <Button 
+                    text='Reset'
+                    onClick={this.clearTable}
+                    icon="refresh"
+                    minimal={true}
+                    />
+                    <AddScriptButtonSimple 
+                    onInputChange={this.addScript}
+                    fill={true}
+                    />
+                </ButtonGroup>
+                <ReactTable
+                    showPagination={false}
+                    data={this.state.scripts}
+                    columns={columns}
+                    defaultPageSize={this.state.pageSize} 
+                    noDataText="No scripts detected."
+                    style={{
+                        height: this.state.tableHeight,
+                    }}
+                    className="-striped react-table"
+                />
+            </div>
         );
     }
 }

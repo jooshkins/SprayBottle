@@ -1,74 +1,74 @@
+/*
+ * Copyright 2017 Palantir Technologies, Inc. All rights reserved.
+ */
 html,
 body {
   -webkit-user-select: none;
-  background-color: #293742;
-}
+  background-color: #293742; }
 
 body::-webkit-scrollbar {
-    display: none;
-}
+  display: none; }
 
 .flex-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
+  display: flex;
+  flex-direction: column;
+  width: 100%; }
 
 *, *:before, *:after {
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-    position: relative;
-}
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  position: relative; }
+
 .wrapper {
-    -webkit-box-flex: 1;
-    -webkit-flex: 1;
-        -ms-flex: 1;
-            flex: 1;
-    height: 85vh;
-}
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  height: 85vh; }
+
 /* scrollbar styling */
-/* Turn on custom 8px wide scrollbar */
 ::-webkit-scrollbar {
-    width: 10px; /* 1px wider than Lion. */
-    /* This is more usable for users trying to click it. */
-    background-color: rgba(255, 255, 255, 0);
-    -webkit-border-radius: 100px;
-  }
-  /* hover effect for both scrollbar area, and scrollbar 'thumb' */
-  ::-webkit-scrollbar:hover {
-    background-color: rgba(255, 255, 255, 0.09);
-  }
-  
-  /* The scrollbar 'thumb' ...that marque oval shape in a scrollbar */
-  ::-webkit-scrollbar-thumb:vertical {
-    background: rgba(255, 255, 255, 0.5);
-    -webkit-border-radius: 100px;
-    background-clip: padding-box;
-    border: 2px solid rgba(0, 0, 0, 0);
-    min-height: 10px; /*Prevent it from getting too small */
-  }
-  ::-webkit-scrollbar-thumb:vertical:active {
-    background: rgba(255, 255, 255, 0.61); /* Some darker color when you click it */
-    -webkit-border-radius: 100px;
-  }
+  width: 10px;
+  background-color: rgba(255, 255, 255, 0);
+  -webkit-border-radius: 100px; }
 
-  /* The scrollbar 'thumb' ...that marque oval shape in a scrollbar */
-  ::-webkit-scrollbar-thumb:horizontal {
-    background: rgba(255, 255, 255, 0.5);
-    -webkit-border-radius: 100px;
-    background-clip: padding-box;
-    border: 2px solid rgba(0, 0, 0, 0);
-    min-height: 10px; /*Prevent it from getting too small */
-  }
-  ::-webkit-scrollbar-thumb:horizontal:active {
-    background: rgba(255, 255, 255, 0.61); /* Some darker color when you click it */
-    -webkit-border-radius: 100px;
-  }
+::-webkit-scrollbar:hover {
+  background-color: rgba(255, 255, 255, 0.09); }
 
+::-webkit-scrollbar-thumb:vertical {
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-border-radius: 100px;
+  background-clip: padding-box;
+  border: 2px solid rgba(0, 0, 0, 0);
+  min-height: 10px; }
 
-  /* scrollbar styling END */
+::-webkit-scrollbar-thumb:vertical:active {
+  background: rgba(255, 255, 255, 0.61);
+  -webkit-border-radius: 100px; }
 
-  .ReactTable .-pagination .-btn {
-    color: rgb(255, 255, 255);
-  }
+::-webkit-scrollbar-thumb:horizontal {
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-border-radius: 100px;
+  background-clip: padding-box;
+  border: 2px solid rgba(0, 0, 0, 0);
+  min-height: 10px; }
+
+::-webkit-scrollbar-thumb:horizontal:active {
+  background: rgba(255, 255, 255, 0.61);
+  -webkit-border-radius: 100px; }
+
+/* scrollbar styling END */
+.ReactTable .-pagination .-btn {
+  color: white; }
+
+.hide {
+  display: none; }
+
+.m-10 {
+  margin: 10; }
+
+#test {
+  margin: 10; }
+
+/*# sourceMappingURL=style.css.map */

@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { TitleBar } from './Titlebar/lib/index.js';
-import { Colors, FocusStyleManager } from "@blueprintjs/core";
+import { FocusStyleManager } from "@blueprintjs/core";
 
-import ScriptTable from './ScriptTable.js';
 import NavTabs from './NavTabs.js';
 
 import './style.css';

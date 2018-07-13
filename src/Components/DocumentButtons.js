@@ -2,7 +2,6 @@ import React from 'react'
 import { AnchorButton, ButtonGroup, Alignment } from "@blueprintjs/core";
 import '@blueprintjs/core/lib/css/blueprint.css';
 
-const electron = window.require('electron');
 const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
@@ -19,9 +18,9 @@ class DocumentButtons extends React.Component {
             docPath: store.get('docPath')
         }
 
-        if (this.state.docPath != undefined){
+        if (this.state.docPath !== undefined){
             fs.readdir(this.state.docPath, (err, dir) => {
-                if (dir != undefined) {
+                if (dir !== undefined) {
                     let files = dir.filter(CheckIfFile);
                     this.setState({docs: files})
                 }

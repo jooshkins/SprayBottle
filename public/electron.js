@@ -26,7 +26,7 @@ function createWindow() {
   mainWindow.on('closed', () => mainWindow = null);
   
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools()
 
    // open links with default app
    mainWindow.webContents.on('new-window', function (e, url) {
