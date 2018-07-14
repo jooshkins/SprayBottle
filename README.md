@@ -2,7 +2,11 @@
 **A simple tool for supercharging your scripts** -
 The aim of this app, is to provide a GUI for admins to easily run scripts, and deliver those scripts to non-technical end users in a simple, non-threating way. :baby_chick:
 
-![screenshot](https://github.com/jooshkins/SprayBottle/blob/master/screenshot.PNG)
+**Admin Mode**
+![adminScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/1.PNG)
+
+**Simple Mode** - for end users
+![simpleScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/2.PNG)
 
 :floppy_disk: [Releases](https://github.com/jooshkins/SprayBottle/releases) :tada:
 
