@@ -30,7 +30,8 @@ class ScriptTable extends React.Component {
         }
         this.loadScripts = this.loadScripts.bind(this);
         this.runPosh = this.runPosh.bind(this);
-        this.runBatch = this.runBatch.bind(this);
+        this.runSerial = this.runSerial.bind(this);
+        this.runParallel = this.runParallel.bind(this);
         this.updateBatch = this.updateBatch.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.updateScripts = this.updateScripts.bind(this);
@@ -180,7 +181,7 @@ class ScriptTable extends React.Component {
         if (event) {event.preventDefault();}
     }
 
-    runBatch() {
+    runSerial() {
         let list = [];
         this.state.scripts.map((script, i) => {
             if (script.bat) {
@@ -192,6 +193,19 @@ class ScriptTable extends React.Component {
             this.setState({runList: list})
             this.runPosh(list[0], list)
         }
+    }
+
+    runParallel() {
+        let list = [];
+        this.state.scripts.map((script, i) => {
+            if (script.bat) {
+                list.push(i);
+                }
+            }
+        );
+        list.map(script => {
+            this.runPosh(script, []);
+        });
     }
 
     updateBatch(run, list) {
@@ -346,8 +360,16 @@ class ScriptTable extends React.Component {
             <div>
                 <ButtonGroup> 
                     <Button
-                    text="Run"
-                    onClick={this.runBatch}
+                    text="Serial Run"
+                    onClick={this.runSerial}
+                    icon="play"
+                    minimal={true}
+                    intent={Intent.SUCCESS}
+                    />
+                    <Button
+                    id="parallel"
+                    text="Parallel Run"
+                    onClick={this.runParallel}
                     icon="play"
                     minimal={true}
                     intent={Intent.SUCCESS}
