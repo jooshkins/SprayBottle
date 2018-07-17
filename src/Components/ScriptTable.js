@@ -24,6 +24,7 @@ class ScriptTable extends React.Component {
         this.state = {
             runList: [],
             lastRun: 0,
+            errAct: '0',
             scripts: store.get('scripts', []),
             scriptPath: store.get('scriptPath'),
             scriptPathMTime: store.get('scriptPathMTime', 0)
@@ -127,6 +128,7 @@ class ScriptTable extends React.Component {
         this.updateScripts(id, 'log', [])
         let run = this.state.lastRun;
         let cmd = `${this.state.scripts[id].path} '${this.state.scripts[id].param}'`;
+        let errAct = this.state.errAct;
 
         if (this.state.scripts[id].adm) {
             let admCmd = `powershell.exe ${cmd}`
@@ -139,6 +141,7 @@ class ScriptTable extends React.Component {
                     if (error) {
                         updateScripts(id, 'log', error.message, true)
                         updateScripts(id, 'status', 'error')
+                        if (errAct === '1') {updateBatch(run, list)}
                     }
                     if (stdout) {
                         updateScripts(id, 'log', stdout, true)
@@ -148,6 +151,7 @@ class ScriptTable extends React.Component {
                     if (stderr) {
                         updateScripts(id, 'log', stderr, true)
                         updateScripts(id, 'status', 'error')
+                        if (errAct === '1') {updateBatch(run, list)}
                     }
                 },
             );
@@ -162,6 +166,7 @@ class ScriptTable extends React.Component {
                 if (err) {
                     this.updateScripts(id, 'log', err, true)
                     this.updateScripts(id, 'status', 'error')
+                    if (errAct === '1') {this.updateBatch(run, list)}
                 }
             });
             ps.on("output", data => {
@@ -175,6 +180,7 @@ class ScriptTable extends React.Component {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
                     this.updateScripts(id, 'status', 'error')
+                    if (errAct === '1') {this.updateBatch(run, list)}
                 }
             });
         }
@@ -228,7 +234,9 @@ class ScriptTable extends React.Component {
         } else if (event.target.id.match(/bat-/g)) {
             let id = event.target.id.slice(4)
             this.updateScripts(id, 'bat', event.target.checked)
-        } 
+        } else if (event.target.id === 'errAct') {
+            this.setState({errAct: event.target.value})
+        }
     }
 
     clearTable() {
@@ -367,10 +375,9 @@ class ScriptTable extends React.Component {
                     intent={Intent.SUCCESS}
                     />
                     <Button
-                    id="parallel"
                     text="Parallel Run"
                     onClick={this.runParallel}
-                    icon="play"
+                    icon="double-chevron-right"
                     minimal={true}
                     intent={Intent.SUCCESS}
                     />
@@ -384,6 +391,12 @@ class ScriptTable extends React.Component {
                     onInputChange={this.addScript}
                     fill={true}
                     />
+                    <div className="pt-select pt-minimal">
+                        <select onChange={this.handleChange} defaultValue={this.state.errAct} id="errAct">
+                            <option value='0'>Stop on error</option>
+                            <option value='1'>Resume on error</option>
+                        </select>
+                    </div>
                 </ButtonGroup>
                 <ReactTable
                     showPagination={false}
