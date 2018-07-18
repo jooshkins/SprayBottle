@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, ButtonGroup, Switch, Intent, Checkbox} from '@blueprintjs/core';
+import { Button, ButtonGroup, Switch, Intent, Checkbox, Tooltip} from '@blueprintjs/core';
 import ScriptStatus from './ScriptStatus'
 import AddScriptButtonSimple from './AddScriptButtonSimple'
 import '@blueprintjs/core/lib/css/blueprint.css';
@@ -60,6 +60,7 @@ class ScriptTable extends React.Component {
                                     name: file,
                                     param: '',
                                     adm: false,
+                                    con: false,
                                     status: '',
                                     log: [],
                                     path: this.state.scriptPath + '\\' + file
@@ -128,7 +129,7 @@ class ScriptTable extends React.Component {
         this.updateScripts(id, 'log', [])
         let run = this.state.lastRun;
         let cmd = `${this.state.scripts[id].path} '${this.state.scripts[id].param}'`;
-        let errAct = this.state.errAct;
+        let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
             let admCmd = `powershell.exe ${cmd}`
@@ -141,7 +142,7 @@ class ScriptTable extends React.Component {
                     if (error) {
                         updateScripts(id, 'log', error.message, true)
                         updateScripts(id, 'status', 'error')
-                        if (errAct === '1') {updateBatch(run, list)}
+                        if (errAct) {updateBatch(run, list)}
                     }
                     if (stdout) {
                         updateScripts(id, 'log', stdout, true)
@@ -151,7 +152,7 @@ class ScriptTable extends React.Component {
                     if (stderr) {
                         updateScripts(id, 'log', stderr, true)
                         updateScripts(id, 'status', 'error')
-                        if (errAct === '1') {updateBatch(run, list)}
+                        if (errAct) {updateBatch(run, list)}
                     }
                 },
             );
@@ -166,7 +167,7 @@ class ScriptTable extends React.Component {
                 if (err) {
                     this.updateScripts(id, 'log', err, true)
                     this.updateScripts(id, 'status', 'error')
-                    if (errAct === '1') {this.updateBatch(run, list)}
+                    if (errAct) {this.updateBatch(run, list)}
                 }
             });
             ps.on("output", data => {
@@ -180,7 +181,7 @@ class ScriptTable extends React.Component {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
                     this.updateScripts(id, 'status', 'error')
-                    if (errAct === '1') {this.updateBatch(run, list)}
+                    if (errAct) {this.updateBatch(run, list)}
                 }
             });
         }
@@ -234,6 +235,9 @@ class ScriptTable extends React.Component {
         } else if (event.target.id.match(/bat-/g)) {
             let id = event.target.id.slice(4)
             this.updateScripts(id, 'bat', event.target.checked)
+        } else if (event.target.id.match(/con-/g)) {
+            let id = event.target.id.slice(4)
+            this.updateScripts(id, 'con', event.target.checked)
         } else if (event.target.id === 'errAct') {
             this.setState({errAct: event.target.value})
         }
@@ -245,6 +249,7 @@ class ScriptTable extends React.Component {
                 script.bat = false;
                 script.param =  '';
                 script.adm = false;
+                script.con = false;
                 script.status = '';
                 scripts.push(script);
             }
@@ -321,10 +326,10 @@ class ScriptTable extends React.Component {
                 Cell: props =>
                 <Checkbox
                     id={'bat-' + props.index}
+                    large={true}
                     checked={props.value}
                     style={{ marginTop: 5, marginLeft: 5}}
                     onChange={this.handleChange}
-                    large={true}
                 />
             }, {
                 Header: 'Script',
@@ -358,6 +363,25 @@ class ScriptTable extends React.Component {
                         onChange={this.handleChange}
                     />
             }, {
+                Header: () => (
+                    <Tooltip
+                    content="Continue on Error"
+                    hoverOpenDelay={500}
+                    >
+                        <span>Continue on Error</span>
+                    </Tooltip>
+                ),
+                accessor: 'con',
+                width: 80,
+                Cell: props =>
+                    <Checkbox
+                    id={'con-' + props.index}
+                    large={true}
+                    style={{ marginTop: 5, marginLeft: 5}}
+                    checked={props.value}
+                    onChange={this.handleChange}
+                    />
+            }, {
                 Header: 'Status',
                 width: 60,
                 accessor: 'status',
@@ -366,37 +390,42 @@ class ScriptTable extends React.Component {
         ]
         return (
             <div>
-                <ButtonGroup> 
-                    <Button
-                    text="Serial Run"
-                    onClick={this.runSerial}
-                    icon="play"
-                    minimal={true}
-                    intent={Intent.SUCCESS}
-                    />
-                    <Button
-                    text="Parallel Run"
-                    onClick={this.runParallel}
-                    icon="double-chevron-right"
-                    minimal={true}
-                    intent={Intent.SUCCESS}
-                    />
+                <ButtonGroup>
+                    <Tooltip
+                    content="Run selected actions one at a time."
+                    hoverOpenDelay={500}
+                    >
+                        <Button
+                        text="Serial Run"
+                        onClick={this.runSerial}
+                        icon="play"
+                        minimal={true}
+                        intent={Intent.SUCCESS}
+                        />
+                    </Tooltip> 
+                    <Tooltip 
+                    content="Run selected actions at the same time."
+                    hoverOpenDelay={500}
+                    >
+                        <Button
+                        text="Parallel Run"
+                        onClick={this.runParallel}
+                        icon="double-chevron-right"
+                        minimal={true}
+                        intent={Intent.SUCCESS}
+                        />
+                    </Tooltip>
                     <Button 
                     text='Reset'
                     onClick={this.clearTable}
                     icon="refresh"
                     minimal={true}
+                    intent={Intent.WARNING}
                     />
                     <AddScriptButtonSimple 
                     onInputChange={this.addScript}
                     fill={true}
                     />
-                    <div className="pt-select pt-minimal">
-                        <select onChange={this.handleChange} defaultValue={this.state.errAct} id="errAct">
-                            <option value='0'>Stop on error</option>
-                            <option value='1'>Resume on error</option>
-                        </select>
-                    </div>
                 </ButtonGroup>
                 <ReactTable
                     showPagination={false}
