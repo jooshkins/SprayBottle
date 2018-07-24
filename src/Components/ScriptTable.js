@@ -216,13 +216,15 @@ class ScriptTable extends React.Component {
     }
 
     updateBatch(run, list) {
-        run ++
-        if (list.length > run) {
-            this.setState({lastRun: run});
-            this.runPosh(list[run], list);
-        } else if (list.length === run) {
-            this.setState({lastRun: 0})
-            this.setState({runList: []})
+        if (this.state.lastRun !== run + 1) { // check if method has been called in the past
+            run ++
+            if (list.length > run) {
+                this.setState({lastRun: run});
+                this.runPosh(list[run], list);
+            } else if (list.length === run) {
+                this.setState({lastRun: 0})
+                this.setState({runList: []})
+            }
         }
     }
 
