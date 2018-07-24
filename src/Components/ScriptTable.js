@@ -333,11 +333,11 @@ class ScriptTable extends React.Component {
                 />
             }, {
                 Header: 'Script',
-                accessor: 'name',
+                accessor: 'path',
                 Cell: props =>
                     <a
-                        href={this.state.scriptPath + '\\' + props.value}
-                        target="_blank">{props.value}
+                        href={props.value}
+                        target="_blank">{props.value.match(/[^/\\]+$/)}
                     </a>
             }, {
                 Header: 'Parameter',
