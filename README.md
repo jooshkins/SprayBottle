@@ -16,17 +16,17 @@ The aim of this app, is to provide a GUI for admins to easily run scripts, and d
 - [x] Admin mode with optional parameters and console
 - [x] Optional launching scripts with admin rights
 - [x] Info section for storing documentation
+- [x] Support of Non Powershell Scripts
 
 ### Planned Features
 - [ ] Cross Platform Support Linux and OSX
-- [ ] Support of Non Powershell Scripts
 - [ ] Saved sets of tasks
 - [ ] Pushing remote cmds
 
 For more details see the: [Road Map](https://github.com/jooshkins/spraybottle/projects/1)
 
 ### Current Limitations:
-* Only works with Windows and PowerShell scripts. 
+* Only works with Windows. 
 
 
 ### Built with:
