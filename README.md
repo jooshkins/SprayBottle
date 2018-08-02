@@ -3,10 +3,10 @@
 The aim of this app, is to provide a GUI for admins to easily run scripts, and deliver those scripts to non-technical end users in a simple, non-threating way. :baby_chick:
 
 **Admin Mode**
-![adminScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/1.png)
+![adminScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/3.png)
 
 **Simple Mode** - for end users
-![simpleScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/2.png)
+![simpleScreenshot](https://github.com/jooshkins/SprayBottle/blob/master/4.png)
 
 :floppy_disk: [Releases](https://github.com/jooshkins/SprayBottle/releases) :tada:
 
