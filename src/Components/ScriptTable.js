@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, ButtonGroup, Switch, Intent, Checkbox, Tooltip} from '@blueprintjs/core';
+import { Button, ButtonGroup, Switch, Intent, Checkbox, Tooltip } from '@blueprintjs/core';
 import ScriptStatus from './ScriptStatus'
 import AddScriptButtonSimple from './AddScriptButtonSimple'
 import '@blueprintjs/core/lib/css/blueprint.css';
@@ -14,8 +14,8 @@ const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
 
-const CheckIfPs1 = (file) => {
-    return file.match(/.+\.ps1\b/);
+const CheckIfFile = (file) => {
+    return file.match(/.+\.\b/); // filter out directories and blank files
 }
 
 class ScriptTable extends React.Component {
@@ -41,19 +41,19 @@ class ScriptTable extends React.Component {
         this.clearTable = this.clearTable.bind(this);
         this.addScript = this.addScript.bind(this);
 
-        this.loadScripts()
+        this.loadScripts(this.state.scriptPath)
     };
 
-    loadScripts() {
-        if (this.state.scriptPath !== undefined) { // if script path is set
-            fs.stat(this.state.scriptPath, (err, stats) => {
+    loadScripts(dirPath) {
+        if (dirPath !== undefined) { // if script path is set
+            fs.stat(dirPath, (err, stats) => {
                 if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed 
-                    fs.readdir(this.state.scriptPath, (err, dir) => {
+                    fs.readdir(dirPath, (err, dir) => {
                         if (dir !== undefined) { // if folder actually exists
-                            let files = dir.filter(CheckIfPs1);
+                            let files = dir.filter(CheckIfFile);
                             store.set('numFiles', files.length); // re-add file count just in case
                             let scriptsCopy = this.state.scripts.slice(0);
-        
+
                             for (let file of files) {
                                 let script = {
                                     bat: false,
@@ -63,7 +63,7 @@ class ScriptTable extends React.Component {
                                     con: false,
                                     status: '',
                                     log: [],
-                                    path: this.state.scriptPath + '\\' + file
+                                    path: dirPath + '\\' + file
                                 }
                                 scriptsCopy.push(script)
                             };
@@ -79,29 +79,30 @@ class ScriptTable extends React.Component {
         }
     }
 
-    updateTableHeight() {
-        let height = window.innerHeight - 110;
-        this.setState({ tableHeight: height });
-    }
-
     updateTablePageSize() {
         let n = store.get('numFiles', 0)
         let p;
         if (n === 0) {
             p = 100
         } else if (n <= 10 && n !== 0) {
-            p = 10
+            p = 11
         } else {
             p = n + 1;
         }
-        this.setState({pageSize: p})
+        this.setState({ pageSize: p })
     }
 
     componentWillMount() {
         this.updateTablePageSize();
     }
 
+    updateTableHeight() {
+        let height = window.innerHeight - 110;
+        this.setState({ tableHeight: height });
+    }
+
     componentDidMount() {
+        this.updateTablePageSize();
         this.updateTableHeight();
         window.addEventListener('resize', this.updateTableHeight);
     }
@@ -120,7 +121,7 @@ class ScriptTable extends React.Component {
             let scripts = [...this.state.scripts];
             scripts[id][prop] = data
             this.setState({ scripts })
-            store.set('scripts', scripts) 
+            store.set('scripts', scripts)
         }
     }
 
@@ -139,26 +140,35 @@ class ScriptTable extends React.Component {
 
             sudo.exec(admCmd, options,
                 function (error, stdout, stderr) {
+                    let didError
                     if (error) {
                         updateScripts(id, 'log', error.message, true)
-                        updateScripts(id, 'status', 'error')
-                        if (errAct) {updateBatch(run, list)}
+                        didError = true
                     }
                     if (stdout) {
                         updateScripts(id, 'log', stdout, true)
-                        updateScripts(id, 'status', 'success')
-                        updateBatch(run, list)
                     }
                     if (stderr) {
                         updateScripts(id, 'log', stderr, true)
+                        didError = true
+                    }
+                    if (didError) {
                         updateScripts(id, 'status', 'error')
-                        if (errAct) {updateBatch(run, list)}
+                        if (errAct) {
+                            updateBatch(run, list) 
+                        } else {
+                            updateBatch(run, list, true) // clear run list        
+                        }
+                    } else {
+                        updateScripts(id, 'status', 'success')
+                        updateBatch(run, list)
                     }
                 },
             );
-        }
+        }   
 
         else {
+            let didError
             let ps = new powershell(cmd, {
                 executionPolicy: 'Bypass',
                 noProfile: true,
@@ -166,26 +176,35 @@ class ScriptTable extends React.Component {
             ps.on("error", err => {
                 if (err) {
                     this.updateScripts(id, 'log', err, true)
-                    this.updateScripts(id, 'status', 'error')
-                    if (errAct) {this.updateBatch(run, list)}
+                    didError = true
                 }
             });
             ps.on("output", data => {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
-                    this.updateScripts(id, 'status', 'success')
-                    this.updateBatch(run, list)
                 }
             });
             ps.on("error-output", data => {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
+                    didError = true
+                }
+            });
+            ps.on("end", () => {
+                if (didError) {
                     this.updateScripts(id, 'status', 'error')
-                    if (errAct) {this.updateBatch(run, list)}
+                    if (errAct) {
+                        this.updateBatch(run, list) 
+                    } else {
+                        this.updateBatch(run, list, true) // clear run list        
+                    }
+                } else {
+                    this.updateScripts(id, 'status', 'success')
+                    this.updateBatch(run, list)
                 }
             });
         }
-        if (event) {event.preventDefault();}
+        if (event) { event.preventDefault(); }
     }
 
     runSerial() {
@@ -193,11 +212,10 @@ class ScriptTable extends React.Component {
         this.state.scripts.map((script, i) => {
             if (script.bat) {
                 list.push(i);
-                }
             }
-        );
+        });
         if (list.length > 0) {
-            this.setState({runList: list})
+            this.setState({ runList: list })
             this.runPosh(list[0], list)
         }
     }
@@ -207,24 +225,32 @@ class ScriptTable extends React.Component {
         this.state.scripts.map((script, i) => {
             if (script.bat) {
                 list.push(i);
-                }
             }
+        }
         );
         list.map(script => {
             this.runPosh(script, []);
         });
     }
 
-    updateBatch(run, list) {
-        if (this.state.lastRun !== run + 1) { // check if method has been called in the past
-            run ++
+    updateBatch(run, list, clear) {
+        if (clear) {  // when it encounters an error
+            this.setState({ lastRun: 0 })
+            this.setState({ runList: [] })
+        } 
+        else if (this.state.lastRun < run + 1) { // check if method has been called in the past
+            run++
             if (list.length > run) {
-                this.setState({lastRun: run});
+                this.setState({ lastRun: run });
                 this.runPosh(list[run], list);
-            } else if (list.length === run) {
-                this.setState({lastRun: 0})
-                this.setState({runList: []})
+            } else {
+                this.setState({ lastRun: 0 })
+                this.setState({ runList: [] })
             }
+        } 
+        else {
+            this.setState({ lastRun: 0 })
+            this.setState({ runList: [] })
         }
     }
 
@@ -241,20 +267,20 @@ class ScriptTable extends React.Component {
             let id = event.target.id.slice(4)
             this.updateScripts(id, 'con', event.target.checked)
         } else if (event.target.id === 'errAct') {
-            this.setState({errAct: event.target.value})
+            this.setState({ errAct: event.target.value })
         }
     }
 
     clearTable() {
         let scripts = [];
         this.state.scripts.map((script) => {
-                script.bat = false;
-                script.param =  '';
-                script.adm = false;
-                script.con = false;
-                script.status = '';
-                scripts.push(script);
-            }
+            script.bat = false;
+            script.param = '';
+            script.adm = false;
+            script.con = false;
+            script.status = '';
+            scripts.push(script);
+        }
         );
         store.set('scripts', scripts)
         this.setState({ scripts })
@@ -326,13 +352,13 @@ class ScriptTable extends React.Component {
                 width: 60,
                 accessor: 'bat',
                 Cell: props =>
-                <Checkbox
-                    id={'bat-' + props.index}
-                    large={true}
-                    checked={props.value}
-                    style={{ marginTop: 5, marginLeft: 5}}
-                    onChange={this.handleChange}
-                />
+                    <Checkbox
+                        id={'bat-' + props.index}
+                        large={true}
+                        checked={props.value}
+                        style={{ marginTop: 5, marginLeft: 5 }}
+                        onChange={this.handleChange}
+                    />
             }, {
                 Header: 'Script',
                 accessor: 'path',
@@ -367,8 +393,8 @@ class ScriptTable extends React.Component {
             }, {
                 Header: () => (
                     <Tooltip
-                    content="Continue on Error"
-                    hoverOpenDelay={500}
+                        content="Continue on Error"
+                        hoverOpenDelay={500}
                     >
                         <span>Continue on Error</span>
                     </Tooltip>
@@ -377,11 +403,11 @@ class ScriptTable extends React.Component {
                 width: 80,
                 Cell: props =>
                     <Checkbox
-                    id={'con-' + props.index}
-                    large={true}
-                    style={{ marginTop: 5, marginLeft: 5}}
-                    checked={props.value}
-                    onChange={this.handleChange}
+                        id={'con-' + props.index}
+                        large={true}
+                        style={{ marginTop: 5, marginLeft: 5 }}
+                        checked={props.value}
+                        onChange={this.handleChange}
                     />
             }, {
                 Header: 'Status',
@@ -394,46 +420,46 @@ class ScriptTable extends React.Component {
             <div>
                 <ButtonGroup>
                     <Tooltip
-                    content="Run selected actions one at a time."
-                    hoverOpenDelay={500}
+                        content="Run selected actions one at a time."
+                        hoverOpenDelay={500}
                     >
                         <Button
-                        text="Serial Run"
-                        onClick={this.runSerial}
-                        icon="play"
-                        minimal={true}
-                        intent={Intent.SUCCESS}
-                        />
-                    </Tooltip> 
-                    <Tooltip 
-                    content="Run selected actions at the same time."
-                    hoverOpenDelay={500}
-                    >
-                        <Button
-                        text="Parallel Run"
-                        onClick={this.runParallel}
-                        icon="double-chevron-right"
-                        minimal={true}
-                        intent={Intent.SUCCESS}
+                            text="Serial Run"
+                            onClick={this.runSerial}
+                            icon="play"
+                            minimal={true}
+                            intent={Intent.SUCCESS}
                         />
                     </Tooltip>
-                    <Button 
-                    text='Reset'
-                    onClick={this.clearTable}
-                    icon="refresh"
-                    minimal={true}
-                    intent={Intent.WARNING}
+                    <Tooltip
+                        content="Run selected actions at the same time."
+                        hoverOpenDelay={500}
+                    >
+                        <Button
+                            text="Parallel Run"
+                            onClick={this.runParallel}
+                            icon="double-chevron-right"
+                            minimal={true}
+                            intent={Intent.SUCCESS}
+                        />
+                    </Tooltip>
+                    <Button
+                        text='Reset'
+                        onClick={this.clearTable}
+                        icon="refresh"
+                        minimal={true}
+                        intent={Intent.WARNING}
                     />
-                    <AddScriptButtonSimple 
-                    onInputChange={this.addScript}
-                    fill={true}
+                    <AddScriptButtonSimple
+                        onInputChange={this.addScript}
+                        fill={true}
                     />
                 </ButtonGroup>
                 <ReactTable
                     showPagination={false}
                     data={this.state.scripts}
                     columns={columns}
-                    defaultPageSize={this.state.pageSize} 
+                    defaultPageSize={this.state.pageSize}
                     noDataText="No scripts detected."
                     style={{
                         height: this.state.tableHeight,

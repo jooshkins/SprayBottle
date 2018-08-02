@@ -13,8 +13,8 @@ const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
 
-const CheckIfPs1 = (file) => {
-    return file.match(/.+\.ps1\b/);
+const CheckIfFile = (file) => {
+    return file.match(/.+\.\b/); // filter out directories and blank files
 }
 
 class ScriptTableSimple extends React.Component {
@@ -29,36 +29,36 @@ class ScriptTableSimple extends React.Component {
         }
         this.loadScripts = this.loadScripts.bind(this);
         this.runPosh = this.runPosh.bind(this);
-        this.runBatch = this.runBatch.bind(this);
+        this.runSerial = this.runSerial.bind(this);
         this.updateBatch = this.updateBatch.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.updateScripts = this.updateScripts.bind(this);
         this.updateTableHeight = this.updateTableHeight.bind(this);
         this.updateTablePageSize = this.updateTablePageSize.bind(this);
-        this.clearTable = this.clearTable.bind(this);
 
-        this.loadScripts()
+        this.loadScripts(this.state.scriptPath)
     };
 
-    loadScripts() {
-        if (this.state.scriptPath !== undefined) { // if script path is set
-            fs.stat(this.state.scriptPath, (err, stats) => {
+    loadScripts(dirPath) {
+        if (dirPath !== undefined) { // if script path is set
+            fs.stat(dirPath, (err, stats) => {
                 if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed 
-                    fs.readdir(this.state.scriptPath, (err, dir) => {
+                    fs.readdir(dirPath, (err, dir) => {
                         if (dir !== undefined) { // if folder actually exists
-                            let files = dir.filter(CheckIfPs1);
+                            let files = dir.filter(CheckIfFile);
                             store.set('numFiles', files.length); // re-add file count just in case
                             let scriptsCopy = this.state.scripts.slice(0);
-        
+
                             for (let file of files) {
                                 let script = {
                                     bat: false,
                                     name: file,
                                     param: '',
                                     adm: false,
+                                    con: false,
                                     status: '',
                                     log: [],
-                                    path: this.state.scriptPath + '\\' + file
+                                    path: dirPath + '\\' + file
                                 }
                                 scriptsCopy.push(script)
                             };
@@ -74,29 +74,30 @@ class ScriptTableSimple extends React.Component {
         }
     }
 
-    updateTableHeight() {
-        let height = window.innerHeight - 140;
-        this.setState({ tableHeight: height });
-    }
-
     updateTablePageSize() {
         let n = store.get('numFiles', 0)
         let p;
         if (n === 0) {
             p = 100
         } else if (n <= 10 && n !== 0) {
-            p = 10
+            p = 11
         } else {
             p = n + 1;
         }
-        this.setState({pageSize: p})
+        this.setState({ pageSize: p })
     }
 
     componentWillMount() {
         this.updateTablePageSize();
     }
 
+    updateTableHeight() {
+        let height = window.innerHeight - 140;
+        this.setState({ tableHeight: height });
+    }
+
     componentDidMount() {
+        this.updateTablePageSize();
         this.updateTableHeight();
         window.addEventListener('resize', this.updateTableHeight);
     }
@@ -124,6 +125,7 @@ class ScriptTableSimple extends React.Component {
         this.updateScripts(id, 'log', [])
         let run = this.state.lastRun;
         let cmd = `${this.state.scripts[id].path} '${this.state.scripts[id].param}'`;
+        let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
             let admCmd = `powershell.exe ${cmd}`
@@ -133,24 +135,35 @@ class ScriptTableSimple extends React.Component {
 
             sudo.exec(admCmd, options,
                 function (error, stdout, stderr) {
+                    let didError
                     if (error) {
                         updateScripts(id, 'log', error.message, true)
-                        updateScripts(id, 'status', 'error')
+                        didError = true
                     }
                     if (stdout) {
                         updateScripts(id, 'log', stdout, true)
-                        updateScripts(id, 'status', 'success')
-                        updateBatch(run, list)
                     }
                     if (stderr) {
                         updateScripts(id, 'log', stderr, true)
+                        didError = true
+                    }
+                    if (didError) {
                         updateScripts(id, 'status', 'error')
+                        if (errAct) {
+                            updateBatch(run, list) 
+                        } else {
+                            updateBatch(run, list, true) // clear run list        
+                        }
+                    } else {
+                        updateScripts(id, 'status', 'success')
+                        updateBatch(run, list)
                     }
                 },
             );
         }
 
         else {
+            let didError
             let ps = new powershell(cmd, {
                 executionPolicy: 'Bypass',
                 noProfile: true,
@@ -158,48 +171,68 @@ class ScriptTableSimple extends React.Component {
             ps.on("error", err => {
                 if (err) {
                     this.updateScripts(id, 'log', err, true)
-                    this.updateScripts(id, 'status', 'error')
+                    didError = true
                 }
             });
             ps.on("output", data => {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
-                    this.updateScripts(id, 'status', 'success')
-                    this.updateBatch(run, list)
                 }
             });
             ps.on("error-output", data => {
                 if (data) {
                     this.updateScripts(id, 'log', data, true)
+                    didError = true
+                }
+            });
+            ps.on("end", () => {
+                if (didError) {
                     this.updateScripts(id, 'status', 'error')
+                    if (errAct) {
+                        this.updateBatch(run, list) 
+                    } else {
+                        this.updateBatch(run, list, true) // clear run list        
+                    }
+                } else {
+                    this.updateScripts(id, 'status', 'success')
+                    this.updateBatch(run, list)
                 }
             });
         }
-        if (event) {event.preventDefault();}
+        if (event) { event.preventDefault(); }
     }
 
-    runBatch() {
+    runSerial() {
         let list = [];
         this.state.scripts.map((script, i) => {
             if (script.bat) {
                 list.push(i);
-                }
             }
-        );
+        });
         if (list.length > 0) {
-            this.setState({runList: list})
+            this.setState({ runList: list })
             this.runPosh(list[0], list)
         }
     }
 
-    updateBatch(run, list) {
-        run ++
-        if (list.length > run) {
-            this.setState({lastRun: run});
-            this.runPosh(list[run], list);
-        } else if (list.length === run) {
-            this.setState({lastRun: 0})
-            this.setState({runList: []})
+    updateBatch(run, list, clear) {
+        if (clear) {  // when it encounters an error
+            this.setState({ lastRun: 0 })
+            this.setState({ runList: [] })
+        } 
+        else if (this.state.lastRun < run + 1) { // check if method has been called in the past
+            run++
+            if (list.length > run) {
+                this.setState({ lastRun: run });
+                this.runPosh(list[run], list);
+            } else {
+                this.setState({ lastRun: 0 })
+                this.setState({ runList: [] })
+            }
+        } 
+        else {
+            this.setState({ lastRun: 0 })
+            this.setState({ runList: [] })
         }
     }
 
@@ -212,21 +245,12 @@ class ScriptTableSimple extends React.Component {
         } else if (event.target.id.match(/bat-/g)) {
             let id = event.target.id.slice(4)
             this.updateScripts(id, 'bat', event.target.checked)
-        } 
-    }
-
-    clearTable() {
-        let scripts = [];
-        this.state.scripts.map((script) => {
-                script.bat = false;
-                script.param =  '';
-                script.adm = false;
-                script.status = '';
-                scripts.push(script);
-            }
-        );
-        store.set('scripts', scripts)
-        this.setState({ scripts })
+        } else if (event.target.id.match(/con-/g)) {
+            let id = event.target.id.slice(4)
+            this.updateScripts(id, 'con', event.target.checked)
+        } else if (event.target.id === 'errAct') {
+            this.setState({ errAct: event.target.value })
+        }
     }
 
     render() {
@@ -317,7 +341,7 @@ class ScriptTableSimple extends React.Component {
                 > 
                     <Button
                     text="Run Actions"
-                    onClick={this.runBatch}
+                    onClick={this.runSerial}
                     icon="play"
                     minimal={false}
                     large={true}

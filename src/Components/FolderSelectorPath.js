@@ -6,8 +6,8 @@ const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
 
-const CheckIfPs1 = (file) => {
-  return file.match(/.+\.ps1\b/);
+const CheckIfFile = (file) => {
+  return file.match(/.+\.\b/);
 }
 
 class FolderSelectorPath extends React.Component {
@@ -49,7 +49,7 @@ class FolderSelectorPath extends React.Component {
       
       fs.readdir(this.state.path, (err, dir) => {  // Count files
         if (dir !== undefined) { // if folder actually exists
-          let files = dir.filter(CheckIfPs1);
+          let files = dir.filter(CheckIfFile);
           store.set('numFiles', files.length);
         }
       });

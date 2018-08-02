@@ -21,8 +21,6 @@ class Settings extends React.Component {
     handleRadioChange(event) {
         this.setState({radioValue: event.currentTarget.value})
         store.set('mode', event.currentTarget.value)
-        store.delete('scripts'); // delete scripts object
-        store.delete('scriptPathMTime') // delete folder modify time
     }
 
     render() {
