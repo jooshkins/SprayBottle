@@ -26,7 +26,7 @@ class ScriptTable extends React.Component {
             lastRun: 0,
             errAct: '0',
             scripts: store.get('scripts', []),
-            scriptPath: store.get('scriptPath'),
+            scriptPath: store.get('scriptPath', ''),
             scriptPathMTime: store.get('scriptPathMTime', 0)
         }
         this.loadScripts = this.loadScripts.bind(this);
@@ -41,42 +41,48 @@ class ScriptTable extends React.Component {
         this.clearTable = this.clearTable.bind(this);
         this.addScript = this.addScript.bind(this);
 
-        this.loadScripts(this.state.scriptPath)
+        this.state.scriptPath !== '' ? this.loadScripts(this.state.scriptPath) : null
     };
 
     loadScripts(dirPath) {
-        if (dirPath !== undefined) { // if script path is set
-            fs.stat(dirPath, (err, stats) => {
-                if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed 
-                    fs.readdir(dirPath, (err, dir) => {
-                        if (dir !== undefined) { // if folder actually exists
-                            let files = dir.filter(CheckIfFile);
-                            store.set('numFiles', files.length); // re-add file count just in case
-                            let scriptsCopy = this.state.scripts.slice(0);
+        fs.stat(dirPath, (err, stats) => {
+            if (err) {
+                this.setState({scripts: []}) // clear out script table, because there can be false entries
+                store.set({
+                    scripts: [],
+                    scriptPath: ''
+                })
+            } else {
+                if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed
+                    let scriptsCopy
+                    this.state.scripts !== [] ? 
+                    scriptsCopy = this.state.scripts.filter(script => !script.path.startsWith(dirPath + '/')) : scriptsCopy = [] // filter out dupes
 
-                            for (let file of files) {
-                                let script = {
-                                    bat: false,
-                                    name: file,
-                                    param: '',
-                                    adm: false,
-                                    con: false,
-                                    status: '',
-                                    log: [],
-                                    path: dirPath + '\\' + file
-                                }
-                                scriptsCopy.push(script)
-                            };
-                            this.setState({
-                                scripts: scriptsCopy
-                            })
-                            store.set('scripts', scriptsCopy)
-                        }
+                    fs.readdir(dirPath, (err, dir) => {
+                        let files = dir.filter(CheckIfFile);
+                        for (let file of files) {
+                            let script = {
+                                bat: false,
+                                name: file,
+                                param: '',
+                                adm: false,
+                                con: false,
+                                status: '',
+                                log: [],    
+                                path: dirPath + '/' + file
+                            }
+                            scriptsCopy.push(script)
+                        };
+                        this.setState({
+                            scripts: scriptsCopy
+                        })
+                        store.set('scripts', scriptsCopy)
+                        store.set('numFiles', scriptsCopy.length); 
                     });
                     store.set('scriptPathMTime', stats.mtimeMs)
                 }
-            })
-        }
+            }
+        })
     }
 
     updateTablePageSize() {
@@ -155,7 +161,7 @@ class ScriptTable extends React.Component {
                     if (didError) {
                         updateScripts(id, 'status', 'error')
                         if (errAct) {
-                            updateBatch(run, list) 
+                            updateBatch(run, list)
                         } else {
                             updateBatch(run, list, true) // clear run list        
                         }
@@ -165,7 +171,7 @@ class ScriptTable extends React.Component {
                     }
                 },
             );
-        }   
+        }
 
         else {
             let didError
@@ -194,7 +200,7 @@ class ScriptTable extends React.Component {
                 if (didError) {
                     this.updateScripts(id, 'status', 'error')
                     if (errAct) {
-                        this.updateBatch(run, list) 
+                        this.updateBatch(run, list)
                     } else {
                         this.updateBatch(run, list, true) // clear run list        
                     }
@@ -237,7 +243,7 @@ class ScriptTable extends React.Component {
         if (clear) {  // when it encounters an error
             this.setState({ lastRun: 0 })
             this.setState({ runList: [] })
-        } 
+        }
         else if (this.state.lastRun < run + 1) { // check if method has been called in the past
             run++
             if (list.length > run) {
@@ -247,7 +253,7 @@ class ScriptTable extends React.Component {
                 this.setState({ lastRun: 0 })
                 this.setState({ runList: [] })
             }
-        } 
+        }
         else {
             this.setState({ lastRun: 0 })
             this.setState({ runList: [] })
