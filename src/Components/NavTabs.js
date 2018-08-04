@@ -2,35 +2,22 @@ import React from 'react'
 import { Tab, Tabs, Navbar, Button } from "@blueprintjs/core";
 import '@blueprintjs/core/lib/css/blueprint.css';
 import ScriptTable from './ScriptTable';
-import ScriptTableSimple from './ScriptTableSimple';
 import DocumentButtons from './DocumentButtons';
 import Settings from './Settings';  
-
-const Store = window.require('electron-store');
-const store = new Store();
-
-const selectTable = () => {
-    if (store.get('mode') === 'simple') {
-        return <ScriptTableSimple />
-    }
-    else {
-        return <ScriptTable/>
-    }
-}
 
 class NavTabs extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             navebarTabId: 'Actions',
-            panel: selectTable(),
+            panel: <ScriptTable/>,
         };
     }
 
     handleNavbarTabChange = (navbarTabId) => {        
         switch(navbarTabId) {
             case 'Actions':
-                this.setState({panel: selectTable()})
+                this.setState({panel: <ScriptTable/>})
             break;
 
             case 'Info':
@@ -41,7 +28,7 @@ class NavTabs extends React.Component {
                 this.setState({ panel: <Settings /> });
                 break;
             default:
-                this.setState({panel: selectTable()});
+                this.setState({panel: <ScriptTable/>});
         }
     }
 

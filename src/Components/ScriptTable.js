@@ -13,6 +13,7 @@ const sudo = electron.remote.require('sudo-prompt');
 const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
+let simple
 
 const CheckIfFile = (file) => {
     return file.match(/.+\.\b/); // filter out directories and blank files
@@ -99,11 +100,13 @@ class ScriptTable extends React.Component {
     }
 
     componentWillMount() {
+        simple = store.get('mode') === 'simple' // check if in simple mode
         this.updateTablePageSize();
     }
 
     updateTableHeight() {
-        let height = window.innerHeight - 110;
+        let height
+        simple ? height = window.innerHeight - 140 : height = window.innerHeight - 110
         this.setState({ tableHeight: height });
     }
 
@@ -352,128 +355,188 @@ class ScriptTable extends React.Component {
             }
         };
 
-        const columns = [
-            {
-                Header: 'Select',
-                width: 60,
-                accessor: 'bat',
-                Cell: props =>
+        let columns = []
+
+        if (simple) {
+            columns = [
+                {
+                    Header: 'Select',
+                    width: 60,
+                    accessor: 'bat',
+                    Cell: props =>
                     <Checkbox
                         id={'bat-' + props.index}
-                        large={true}
                         checked={props.value}
-                        style={{ marginTop: 5, marginLeft: 5 }}
+                        style={{ marginTop: 5, marginLeft: 5}}
                         onChange={this.handleChange}
-                    />
-            }, {
-                Header: 'Script',
-                accessor: 'path',
-                Cell: props =>
-                    <a
-                        href={props.value}
-                        target="_blank">{props.value.match(/[^/\\]+$/)}
-                    </a>
-            }, {
-                Header: 'Parameter',
-                accessor: 'param',
-                Cell: props =>
-                    <input className="pt-input pt-fill"
-                        id={props.index}
-                        value={props.value}
-                        onChange={this.handleChange}
-                        type="text"
-                        placeholder="Enter Parameters..."
-                    />
-            }, {
-                Header: 'Admin',
-                width: 60,
-                accessor: 'adm',
-                Cell: props =>
-                    <Switch
-                        id={'adm-' + props.index}
                         large={true}
-                        style={{ marginTop: 5 }}
-                        checked={props.value}
-                        onChange={this.handleChange}
                     />
-            }, {
-                Header: () => (
-                    <Tooltip
-                        content="Continue on Error"
-                        hoverOpenDelay={500}
-                    >
-                        <span>Continue on Error</span>
-                    </Tooltip>
-                ),
-                accessor: 'con',
-                width: 80,
-                Cell: props =>
-                    <Checkbox
-                        id={'con-' + props.index}
-                        large={true}
-                        style={{ marginTop: 5, marginLeft: 5 }}
-                        checked={props.value}
-                        onChange={this.handleChange}
+                }, {
+                    Header: 'Action',
+                    accessor: 'name',
+                    Cell: props =>
+                        <div>
+                            {props.value.match(/[^./\\]+/)}
+                        </div>
+                }, {
+                    Header: 'Status',
+                    width: 60,
+                    accessor: 'status',
+                    Cell: cellRendererStatus
+                }
+            ]
+            return (
+                <div>
+                    <ReactTable
+                        showPagination={false}
+                        data={this.state.scripts}
+                        columns={columns}
+                        defaultPageSize={this.state.pageSize}
+                        noDataText="No scripts detected."
+                        style={{
+                            height: this.state.tableHeight,
+                        }}
+                        className="-striped react-table"
                     />
-            }, {
-                Header: 'Status',
-                width: 60,
-                accessor: 'status',
-                Cell: cellRendererStatus
-            }
-        ]
-        return (
-            <div>
-                <ButtonGroup>
-                    <Tooltip
-                        content="Run selected actions one at a time."
-                        hoverOpenDelay={500}
-                    >
+                    <ButtonGroup
+                    fill={true}
+                    > 
                         <Button
-                            text="Serial Run"
-                            onClick={this.runSerial}
-                            icon="play"
-                            minimal={true}
-                            intent={Intent.SUCCESS}
+                        text="Run Actions"
+                        onClick={this.runSerial}
+                        icon="play"
+                        minimal={false}
+                        large={true}
+                        intent={Intent.SUCCESS}
+                        style={{margin: 10}}
                         />
-                    </Tooltip>
-                    <Tooltip
-                        content="Run selected actions at the same time."
-                        hoverOpenDelay={500}
-                    >
+                    </ButtonGroup>
+                </div>
+            );
+        } else {
+            columns = [
+                {
+                    Header: 'Select',
+                    width: 60,
+                    accessor: 'bat',
+                    Cell: props =>
+                        <Checkbox
+                            id={'bat-' + props.index}
+                            large={true}
+                            checked={props.value}
+                            style={{ marginTop: 5, marginLeft: 5 }}
+                            onChange={this.handleChange}
+                        />
+                }, {
+                    Header: 'Script',
+                    accessor: 'path',
+                    Cell: props =>
+                        <a
+                            href={props.value}
+                            target="_blank">{props.value.match(/[^/\\]+$/)}
+                        </a>
+                }, {
+                    Header: 'Parameter',
+                    accessor: 'param',
+                    Cell: props =>
+                        <input className="pt-input pt-fill"
+                            id={props.index}
+                            value={props.value}
+                            onChange={this.handleChange}
+                            type="text"
+                            placeholder="Enter Parameters..."
+                        />
+                }, {
+                    Header: 'Admin',
+                    width: 60,
+                    accessor: 'adm',
+                    Cell: props =>
+                        <Switch
+                            id={'adm-' + props.index}
+                            large={true}
+                            style={{ marginTop: 5 }}
+                            checked={props.value}
+                            onChange={this.handleChange}
+                        />
+                }, {
+                    Header: () => (
+                        <Tooltip
+                            content="Continue on Error"
+                            hoverOpenDelay={500}
+                        >
+                            <span>Continue on Error</span>
+                        </Tooltip>
+                    ),
+                    accessor: 'con',
+                    width: 80,
+                    Cell: props =>
+                        <Checkbox
+                            id={'con-' + props.index}
+                            large={true}
+                            style={{ marginTop: 5, marginLeft: 5 }}
+                            checked={props.value}
+                            onChange={this.handleChange}
+                        />
+                }, {
+                    Header: 'Status',
+                    width: 60,
+                    accessor: 'status',
+                    Cell: cellRendererStatus
+                }
+            ]
+            return (
+                <div>
+                    <ButtonGroup>
+                        <Tooltip
+                            content="Run selected actions one at a time."
+                            hoverOpenDelay={500}
+                        >
+                            <Button
+                                text="Serial Run"
+                                onClick={this.runSerial}
+                                icon="play"
+                                minimal={true}
+                                intent={Intent.SUCCESS}
+                            />
+                        </Tooltip>
+                        <Tooltip
+                            content="Run selected actions at the same time."
+                            hoverOpenDelay={500}
+                        >
+                            <Button
+                                text="Parallel Run"
+                                onClick={this.runParallel}
+                                icon="double-chevron-right"
+                                minimal={true}
+                                intent={Intent.SUCCESS}
+                            />
+                        </Tooltip>
                         <Button
-                            text="Parallel Run"
-                            onClick={this.runParallel}
-                            icon="double-chevron-right"
+                            text='Reset'
+                            onClick={this.clearTable}
+                            icon="refresh"
                             minimal={true}
-                            intent={Intent.SUCCESS}
+                            intent={Intent.WARNING}
                         />
-                    </Tooltip>
-                    <Button
-                        text='Reset'
-                        onClick={this.clearTable}
-                        icon="refresh"
-                        minimal={true}
-                        intent={Intent.WARNING}
+                        <AddScriptButtonSimple
+                            onInputChange={this.addScript}
+                            fill={true}
+                        />
+                    </ButtonGroup>
+                    <ReactTable
+                        showPagination={false}
+                        data={this.state.scripts}
+                        columns={columns}
+                        defaultPageSize={this.state.pageSize}
+                        noDataText="No scripts detected."
+                        style={{
+                            height: this.state.tableHeight,
+                        }}
+                        className="-striped react-table"
                     />
-                    <AddScriptButtonSimple
-                        onInputChange={this.addScript}
-                        fill={true}
-                    />
-                </ButtonGroup>
-                <ReactTable
-                    showPagination={false}
-                    data={this.state.scripts}
-                    columns={columns}
-                    defaultPageSize={this.state.pageSize}
-                    noDataText="No scripts detected."
-                    style={{
-                        height: this.state.tableHeight,
-                    }}
-                    className="-striped react-table"
-                />
-            </div>
-        );
+                </div>
+            );
+        }
     }
 }
 
