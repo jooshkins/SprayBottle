@@ -17,9 +17,10 @@ The aim of this app, is to provide a GUI for admins to easily run scripts, and d
 - [x] Optional launching scripts with admin rights
 - [x] Info section for storing documentation
 - [x] Support of Non Powershell Scripts
+- [x] OSX support
 
 ### Planned Features
-- [ ] Cross Platform Support Linux and OSX
+- [ ] Support for Linux
 - [ ] Saved sets of tasks
 - [ ] Pushing remote cmds
 
