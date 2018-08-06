@@ -5,6 +5,8 @@ import '@blueprintjs/core/lib/css/blueprint.css';
 const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
+const isMac = window.require("process").platform === "darwin" ? 'file://' : '';
+
 
 const CheckIfFile = (file) => {
     return file.match(/.+\.\b/);
@@ -33,7 +35,7 @@ class DocumentButtons extends React.Component {
         this.state.docs.map((doc, i) => 
           <AnchorButton 
             icon="document"
-            href={`${this.state.docPath}/${doc}`}
+            href={`${isMac}${this.state.docPath}/${doc}`}
             target="_blank"
             text={doc} 
             key={'doc_' + i}>

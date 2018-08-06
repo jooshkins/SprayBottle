@@ -13,7 +13,9 @@ const sudo = electron.remote.require('sudo-prompt');
 const fs = window.require("fs");
 const Store = window.require('electron-store');
 const store = new Store();
+const isMac = window.require("process").platform === "darwin";
 let simple
+isMac ? electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin' : null
 
 const CheckIfFile = (file) => {
     return file.match(/.+\.\b/); // filter out directories and blank files
@@ -142,7 +144,7 @@ class ScriptTable extends React.Component {
         let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
-            let admCmd = `powershell.exe ${cmd}`
+            let admCmd = isMac ? `pws ${cmd}` : `powershell ${cmd}`;
             let options = { name: 'SprayBottle' };
             let updateScripts = this.updateScripts;
             let updateBatch = this.updateBatch;
@@ -181,6 +183,7 @@ class ScriptTable extends React.Component {
             let ps = new powershell(cmd, {
                 executionPolicy: 'Bypass',
                 noProfile: true,
+                PSCore: isMac
             })
             ps.on("error", err => {
                 if (err) {
@@ -431,11 +434,9 @@ class ScriptTable extends React.Component {
                     Header: 'Script',
                     accessor: 'path',
                     Cell: props =>
-                        <a
-                            href={props.value}
-                            target="_blank">{props.value.match(/[^/\\]+$/)}
-                        </a>
-                }, {
+                    isMac ? <a href={`file://${props.value}`} target="_blank">{props.value.match(/[^/\\]+$/)}</a> :
+                        <a href={`${props.value}`} target="_blank">{props.value.match(/[^/\\]+$/)}</a>
+                    }, {
                     Header: 'Parameter',
                     accessor: 'param',
                     Cell: props =>
