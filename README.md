@@ -17,7 +17,7 @@ The aim of this app, is to provide a GUI for admins to easily run scripts, and d
 - [x] Optional launching scripts with admin rights
 - [x] Info section for storing documentation
 - [x] Support of Non Powershell Scripts
-- [x] OSX support
+- [x] OSX support ** Requires [PowerShell Core](https://github.com/PowerShell/PowerShell) installed **
 
 ### Planned Features
 - [ ] Support for Linux
