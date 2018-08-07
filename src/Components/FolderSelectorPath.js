@@ -29,7 +29,7 @@ class FolderSelectorPath extends React.Component {
   }
 
   handleTxt(event) {
-      this.setState({ path: event.target.value })
+    this.setState({ path: event.target.value })
   }
 
   handleBrowse(event) {
@@ -42,17 +42,22 @@ class FolderSelectorPath extends React.Component {
     if (this.props.label === "Document Folder:") {
       store.set('docPath', this.state.path);
     }
-    else {
-      store.set('scriptPath', this.state.path);
-      store.delete('scripts'); // delete scripts object
-      store.delete('scriptPathMTime') // delete folder modify time
-      
-      fs.readdir(this.state.path, (err, dir) => {  // Count files
-        if (dir !== undefined) { // if folder actually exists
-          let files = dir.filter(CheckIfFile);
-          store.set('numFiles', files.length);
-        }
-      });
+    else { // add warning if path has ^ & [] % in it. 
+      var search = /[\^\[\]&%]/;
+      if (search.test(this.state.path)) {
+        alert('Path contains one of these invaild characters: ^ [ ] & %')
+      } else {
+        store.set('scriptPath', this.state.path);
+        store.delete('scripts'); // delete scripts object
+        store.delete('scriptPathMTime') // delete folder modify time
+
+        fs.readdir(this.state.path, (err, dir) => {  // Count files
+          if (dir !== undefined) { // if folder actually exists
+            let files = dir.filter(CheckIfFile);
+            store.set('numFiles', files.length);
+          }
+        });
+      }
     }
   }
 
