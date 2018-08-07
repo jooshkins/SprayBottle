@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, FileInput } from "@blueprintjs/core";
+import { Button, FileInput, Alert, Intent } from "@blueprintjs/core";
 import '@blueprintjs/core/lib/css/blueprint.css';
 
 const fs = window.require("fs");
@@ -16,6 +16,7 @@ class FolderSelectorPath extends React.Component {
     if (this.props.label === "Document Folder:") {
       this.state = {
         path: store.get('docPath'),
+        isOpenError: false
       }
     }
     else {
@@ -26,7 +27,12 @@ class FolderSelectorPath extends React.Component {
     this.handleBrowse = this.handleBrowse.bind(this)
     this.handleTxt = this.handleTxt.bind(this)
     this.handleClick = this.handleClick.bind(this)
+    this.handleErrorClose = this.handleErrorClose.bind(this)
   }
+
+  handleErrorClose() {
+    this.setState({ isOpenError: false });
+  } 
 
   handleTxt(event) {
     this.setState({ path: event.target.value })
@@ -45,7 +51,7 @@ class FolderSelectorPath extends React.Component {
     else { // add warning if path has ^ & [] % in it. 
       var search = /[\^\[\]&%]/;
       if (search.test(this.state.path)) {
-        alert('Path contains one of these invaild characters: ^ [ ] & %')
+        this.setState({ isOpenError: true })
       } else {
         store.set('scriptPath', this.state.path);
         store.delete('scripts'); // delete scripts object
@@ -64,28 +70,39 @@ class FolderSelectorPath extends React.Component {
   render() {
     return (
       <div>
-        <p>{this.props.label}</p>
-        <label className={"pt-button-group " + this.props.fill}>
-          <span className="pt-button pt-intent-primary"> Browse&hellip;
-            <FileInput
-              className="hide"
-              inputProps={{ webkitdirectory: "" }}
-              onChange={this.handleBrowse}
-            />
-          </span>
-          <input
-            className={"pt-input .modifier " + this.props.fill}
-            value={this.state.path}
-            type="text"
-            placeholder="Enter Path..."
-            dir="auto"
-            onChange={this.handleTxt}
-          />
-          <Button onClick={this.handleClick}>Apply</Button>
-        </label>
-      </div>
-    );
-  }
-}
+        <Alert
+          confirmButtonText="Okay"
+          isOpen={this.state.isOpenError}
+          onClose={this.handleErrorClose}
+          icon="error"
+          className="pt-dark"
+          intent={Intent.DANGER}
+        >
+        <p>Path contains one of these invaild characters: ^ ] [ & %</p>
 
+        </Alert>
+          <p>{this.props.label}</p>
+          <label className={"pt-button-group " + this.props.fill}>
+            <span className="pt-button pt-intent-primary"> Browse&hellip;
+            <FileInput
+                className="hide"
+                inputProps={{ webkitdirectory: "" }}
+                onChange={this.handleBrowse}
+              />
+            </span>
+            <input
+              className={"pt-input .modifier " + this.props.fill}
+              value={this.state.path}
+              type="text"
+              placeholder="Enter Path..."
+              dir="auto"
+              onChange={this.handleTxt}
+            />
+            <Button onClick={this.handleClick}>Apply</Button>
+          </label>
+      </div>
+        );
+      }
+    }
+    
 export default FolderSelectorPath;
