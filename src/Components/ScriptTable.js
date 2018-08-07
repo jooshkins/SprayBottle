@@ -140,7 +140,8 @@ class ScriptTable extends React.Component {
         this.updateScripts(id, 'status', 'working')
         this.updateScripts(id, 'log', [])
         let run = this.state.lastRun;
-        let cmd = `${this.state.scripts[id].path} '${this.state.scripts[id].param}'`;
+        let path = this.state.scripts[id].path.replace(/[ &`(){}#@+=~]/g,'`$&') // escape special characters
+        let cmd = `${path} '${this.state.scripts[id].param}'`;
         let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
