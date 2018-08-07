@@ -15,15 +15,15 @@ const Store = window.require('electron-store');
 const store = new Store();
 const isMac = window.require("process").platform === "darwin";
 let simple
+
 isMac ? electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin' : null
+isMac ? CheckifReadable('/usr/local/bin/pwsh') : null // check if pwsh is installed.
 
 const CheckifReadable = (file) => {
     fs.access(file, fs.constants.R_OK, (err) => {
         err ? alert('PowerShell Core required. To install, visit: https://github.com/PowerShell/PowerShell') : null
   });
 }
-
-CheckifReadable('/usr/local/bin/pwsh') // check if pwsh is installed.
 
 const CheckIfFile = (file) => {
     return file.match(/.+\.\b/); // filter out directories and blank files
