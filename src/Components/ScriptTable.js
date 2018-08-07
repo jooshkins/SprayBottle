@@ -17,6 +17,14 @@ const isMac = window.require("process").platform === "darwin";
 let simple
 isMac ? electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin' : null
 
+const CheckifReadable = (file) => {
+    fs.access(file, fs.constants.R_OK, (err) => {
+        err ? alert('PowerShell Core required. To install, visit: https://github.com/PowerShell/PowerShell') : null
+  });
+}
+
+CheckifReadable('/usr/local/bin/pwsh') // check if pwsh is installed.
+
 const CheckIfFile = (file) => {
     return file.match(/.+\.\b/); // filter out directories and blank files
 }
@@ -145,7 +153,7 @@ class ScriptTable extends React.Component {
         let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
-            let admCmd = isMac ? `pws ${cmd}` : `powershell ${cmd}`;
+            let admCmd = isMac ? `pwsh ${cmd}` : `powershell ${cmd}`;
             let options = { name: 'SprayBottle' };
             let updateScripts = this.updateScripts;
             let updateBatch = this.updateBatch;
