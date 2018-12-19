@@ -13,7 +13,7 @@ function createWindow() {
     width: 800, 
     height: 680,
     minWidth: 400,
-    minHeight: 360,
+    minHeight: 450,
     frame: false,
     autoHideMenuBar: true,
     webPreferences: { // allow plugins e.g. pdf viewer

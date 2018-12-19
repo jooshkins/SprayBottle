@@ -15,6 +15,7 @@ const Store = window.require('electron-store');
 const store = new Store();
 const isMac = window.require("process").platform === "darwin";
 let simple
+let cleared = false
 
 const CheckifReadable = (file) => {
     fs.access(file, fs.constants.R_OK, (err) => {
@@ -22,12 +23,17 @@ const CheckifReadable = (file) => {
   });
 }
 
-const CheckIfFile = (file) => {
-    return file.match(/.+\.\b/); // filter out directories and blank files
-}
-
 isMac ? electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin' : null
 isMac ? CheckifReadable('/usr/local/bin/pwsh') : null // check if pwsh is installed.
+
+if (store.size === 0) { // if store is blank, check if config file is in same dir as exe, if so copy settings
+    try {
+        let initConfig = JSON.parse(fs.readFileSync(`${window.process.env.PORTABLE_EXECUTABLE_DIR}\\config.json`, 'utf8'));
+        store.set(initConfig)
+    } catch (err) {
+        console.error('No saved settings, and no inital config file detected.')
+    }
+}
 
 class ScriptTable extends React.Component {
     constructor(props) {
@@ -56,6 +62,8 @@ class ScriptTable extends React.Component {
     };
 
     loadScripts(dirPath) {
+        const CheckIfFile = (file) => {return file.match(/.+\.\b/);}
+
         fs.stat(dirPath, (err, stats) => {
             if (err) {
                 this.setState({scripts: []}) // clear out script table, because there can be false entries
@@ -67,7 +75,7 @@ class ScriptTable extends React.Component {
                 if (this.state.scriptPathMTime !== stats.mtimeMs) { // if folder modify time has changed
                     let scriptsCopy
                     this.state.scripts !== [] ? 
-                    scriptsCopy = this.state.scripts.filter(script => !script.path.startsWith(dirPath + '/')) : scriptsCopy = [] // filter out dupes
+                    scriptsCopy = this.state.scripts.filter(script => !script.path.startsWith(dirPath + '/')) : scriptsCopy = [] // filter out dupes 
 
                     fs.readdir(dirPath, (err, dir) => {
                         let files = dir.filter(CheckIfFile);
@@ -76,8 +84,8 @@ class ScriptTable extends React.Component {
                                 bat: false,
                                 name: file,
                                 param: '',
-                                adm: false,
-                                con: false,
+                                adm: store.get('runAsAdm'),
+                                con: store.get('bypassErr'),
                                 status: '',
                                 log: [],    
                                 path: dirPath + '/' + file
@@ -112,6 +120,7 @@ class ScriptTable extends React.Component {
     componentWillMount() {
         simple = store.get('mode') === 'simple' // check if in simple mode
         this.updateTablePageSize();
+        store.get('clearOnStart') && !cleared ? this.clearTable() : null
     }
 
     updateTableHeight() {
@@ -297,24 +306,27 @@ class ScriptTable extends React.Component {
         this.state.scripts.map((script) => {
             script.bat = false;
             script.param = '';
-            script.adm = false;
-            script.con = false;
+            script.adm = store.get('runAsAdm'),
+            script.con = store.get('bypassErr'),
             script.status = '';
             scripts.push(script);
         }
         );
         store.set('scripts', scripts)
         this.setState({ scripts })
+        cleared = true
     }
 
     addScript(event) {
         if (event.target.files.length > 0) {
             let script = {
+                bat: false,
                 name: event.target.files[0].name,
                 param: '',
-                adm: false,
+                adm: store.get('runAsAdm'),
+                con: store.get('bypassErr'),
                 status: '',
-                log: [],
+                log: [],    
                 path: event.target.files[0].path
             }
             let scripts = [...this.state.scripts];
