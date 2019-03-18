@@ -24,27 +24,23 @@ class FolderSelectorPath extends React.Component {
         path: store.get('scriptPath'),
       }
     }
-    this.handleBrowse = this.handleBrowse.bind(this)
-    this.handleTxt = this.handleTxt.bind(this)
-    this.handleClick = this.handleClick.bind(this)
-    this.handleErrorClose = this.handleErrorClose.bind(this)
   }
 
-  handleErrorClose() {
+  handleErrorClose = () => {
     this.setState({ isOpenError: false });
   } 
 
-  handleTxt(event) {
+  handleTxt = (event) => {
     this.setState({ path: event.target.value })
   }
 
-  handleBrowse(event) {
+  handleBrowse = (event) => {
     if (event.target.files.length > 0) {
       this.setState({ path: event.target.files[0].path })
     }
   }
 
-  handleClick() {
+  handleClick = () => {
     if (this.props.label === "Document Folder:") {
       store.set('docPath', this.state.path);
     }

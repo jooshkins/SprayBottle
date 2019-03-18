@@ -19,12 +19,14 @@ let cleared = false
 
 const CheckifReadable = (file) => {
     fs.access(file, fs.constants.R_OK, (err) => {
-        err ? alert('PowerShell Core required. To install, visit: https://github.com/PowerShell/PowerShell') : null
+        if (err) { alert('PowerShell Core required. To install, visit: https://github.com/PowerShell/PowerShell') }
   });
 }
 
-isMac ? electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin' : null
-isMac ? CheckifReadable('/usr/local/bin/pwsh') : null // check if pwsh is installed.
+if (isMac) {
+    electron.remote.process.env.PATH = electron.remote.process.env.PATH + ':/usr/local/bin'
+    CheckifReadable('/usr/local/bin/pwsh')
+}
 
 if (store.size === 0) { // if store is blank, check if config file is in same dir as exe, if so copy settings
     try {
@@ -46,22 +48,10 @@ class ScriptTable extends React.Component {
             scriptPath: store.get('scriptPath', ''),
             scriptPathMTime: store.get('scriptPathMTime', 0)
         }
-        this.loadScripts = this.loadScripts.bind(this);
-        this.runPosh = this.runPosh.bind(this);
-        this.runSerial = this.runSerial.bind(this);
-        this.runParallel = this.runParallel.bind(this);
-        this.updateBatch = this.updateBatch.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-        this.updateScripts = this.updateScripts.bind(this);
-        this.updateTableHeight = this.updateTableHeight.bind(this);
-        this.updateTablePageSize = this.updateTablePageSize.bind(this);
-        this.clearTable = this.clearTable.bind(this);
-        this.addScript = this.addScript.bind(this);
-
-        this.state.scriptPath !== '' ? this.loadScripts(this.state.scriptPath) : null
+        if (this.state.scriptPath !== '') { this.loadScripts(this.state.scriptPath) }
     };
 
-    loadScripts(dirPath) {
+    loadScripts = (dirPath) => {
         const CheckIfFile = (file) => {return file.match(/.+\.\b/);}
 
         fs.stat(dirPath, (err, stats) => {
@@ -104,7 +94,7 @@ class ScriptTable extends React.Component {
         })
     }
 
-    updateTablePageSize() {
+    updateTablePageSize = () => {
         let n = store.get('numFiles', 0)
         let p;
         if (n === 0) {
@@ -120,10 +110,10 @@ class ScriptTable extends React.Component {
     componentWillMount() {
         simple = store.get('mode') === 'simple' // check if in simple mode
         this.updateTablePageSize();
-        store.get('clearOnStart') && !cleared ? this.clearTable() : null
+        if (store.get('clearOnStart') && !cleared) { this.clearTable() }
     }
 
-    updateTableHeight() {
+    updateTableHeight = () => {
         let height
         simple ? height = window.innerHeight - 140 : height = window.innerHeight - 110
         this.setState({ tableHeight: height });
@@ -139,7 +129,7 @@ class ScriptTable extends React.Component {
         window.removeEventListener('resize', this.updateTableHeight);
     }
 
-    updateScripts(id, prop, data, add) {
+    updateScripts = (id, prop, data, add) => {
         if (add) {
             let scripts = [...this.state.scripts];
             scripts[id][prop].push(data)
@@ -153,7 +143,7 @@ class ScriptTable extends React.Component {
         }
     }
 
-    runPosh(id, list, event) {
+    runPosh = (id, list, event) => {
         this.updateScripts(id, 'status', 'working')
         this.updateScripts(id, 'log', [])
         let run = this.state.lastRun;
@@ -162,7 +152,7 @@ class ScriptTable extends React.Component {
         let errAct = this.state.scripts[id].con;
 
         if (this.state.scripts[id].adm) {
-            let admCmd = isMac ? `pwsh ${cmd}` : `powershell ${cmd}`;
+            let admCmd = isMac ? `pwsh ${cmd}` : `powershell -noprofile -ExecutionPolicy Bypass ${cmd}`;
             let options = { name: 'SprayBottle' };
             let updateScripts = this.updateScripts;
             let updateBatch = this.updateBatch;
@@ -237,7 +227,7 @@ class ScriptTable extends React.Component {
         if (event) { event.preventDefault(); }
     }
 
-    runSerial() {
+    runSerial = () => {
         let list = [];
         this.state.scripts.map((script, i) => {
             if (script.bat) {
@@ -250,7 +240,7 @@ class ScriptTable extends React.Component {
         }
     }
 
-    runParallel() {
+    runParallel = () => {
         let list = [];
         this.state.scripts.map((script, i) => {
             if (script.bat) {
@@ -263,7 +253,7 @@ class ScriptTable extends React.Component {
         });
     }
 
-    updateBatch(run, list, clear) {
+    updateBatch = (run, list, clear) => {
         if (clear) {  // when it encounters an error
             this.setState({ lastRun: 0 })
             this.setState({ runList: [] })
@@ -284,7 +274,7 @@ class ScriptTable extends React.Component {
         }
     }
 
-    handleChange(event) {
+    handleChange = (event) => {
         if (event.target.type === "text") {
             this.updateScripts(event.target.id, 'param', event.target.value)
         } else if (event.target.id.match(/adm-/g)) {
@@ -301,23 +291,21 @@ class ScriptTable extends React.Component {
         }
     }
 
-    clearTable() {
-        let scripts = [];
-        this.state.scripts.map((script) => {
+    clearTable = () => {
+        let scripts = this.state.scripts.map(script => {
             script.bat = false;
             script.param = '';
-            script.adm = store.get('runAsAdm'),
-            script.con = store.get('bypassErr'),
+            script.adm = store.get('runAsAdm')
+            script.con = store.get('bypassErr')
             script.status = '';
-            scripts.push(script);
-        }
-        );
+            return script
+        });
         store.set('scripts', scripts)
         this.setState({ scripts })
         cleared = true
     }
 
-    addScript(event) {
+    addScript = (event) => {
         if (event.target.files.length > 0) {
             let script = {
                 bat: false,
@@ -349,7 +337,6 @@ class ScriptTable extends React.Component {
                             />
                         </div>
                     );
-                    break;
                 case 'success':
                     return (
                         <div>
@@ -361,7 +348,6 @@ class ScriptTable extends React.Component {
                             />
                         </div>
                     );
-                    break;
                 case 'error':
                     return (
                         <div>
@@ -373,7 +359,6 @@ class ScriptTable extends React.Component {
                             />
                         </div>
                     );
-                    break;
                 default:
                     return (<div></div>);
             }

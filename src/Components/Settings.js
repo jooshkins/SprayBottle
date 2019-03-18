@@ -12,29 +12,20 @@ class Settings extends React.Component {
         this.state = {
             radioValue: store.get('mode', 'admin'),
             bypassErr: store.get('bypassErr', false),
+            bypassExecPolicy: store.get('bypassExecPolicy', false),
             runAsAdm: store.get('runAsAdm', false),
             clearOnStart: store.get('clearOnStart', false)
         }
-        this.handleRadioChange = this.handleRadioChange.bind(this)
-        this.handleCheckBoxChange = this.handleCheckBoxChange.bind(this)
     }
 
-    handleRadioChange(event) {
+    handleRadioChange = (event) => {
         this.setState({radioValue: event.currentTarget.value})
         store.set('mode', event.currentTarget.value)
     }
 
-    handleCheckBoxChange(event) {
-        if (event.currentTarget.id === 'bypassErr') {
-            this.setState({bypassErr: event.target.checked})
-            store.set('bypassErr', event.target.checked)
-        } else if (event.currentTarget.id === 'runAsAdm') {
-            this.setState({runAsAdm: event.target.checked})
-            store.set('runAsAdm', event.target.checked)
-        } else if (event.currentTarget.id === 'clearOnStart') {
-            this.setState({clearOnStart: event.target.checked})
-            store.set('clearOnStart', event.target.checked)
-        }
+    handleCheckBoxChange = (event) => {
+        this.setState({[event.target.id]: event.target.checked})
+        store.set(event.target.id, event.target.checked)
     }
 
     render() {
