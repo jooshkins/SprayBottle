@@ -25,15 +25,21 @@ The aim of this app, is to provide a GUI for admins to easily run scripts, and d
 - [ ] Pushing remote cmds
 
 #### To Install from Source:
-`npm install`
+```
+npm install
+```
 
 #### To Develop, Use:
 Runs local server and opens electron.
-`npm run-script electron-dev`
+```
+npm run-script electron-dev
+```
 
 #### To Build Executables and Installers:
 You will need to run on your intended target OS i.e. windows builds windows apps, mac builds mac apps, etc
-`npm run-script dist`
+```
+npm run-script dist
+```
 
 ### Built with:
 * [Electron](https://github.com/electron/electron)
