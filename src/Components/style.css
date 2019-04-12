@@ -68,4 +68,9 @@ body::-webkit-scrollbar {
 #test {
   margin: 10; }
 
+  .toolTip {
+    max-height: 300px;
+    overflow: auto;
+  }
+
 /*# sourceMappingURL=style.css.map */
