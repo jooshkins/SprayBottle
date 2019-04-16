@@ -5,6 +5,7 @@ import FolderSelectorPath from './FolderSelectorPath.js';
 
 const Store = window.require('electron-store');
 const store = new Store();
+const appVersion = window.require('electron').remote.app.getVersion()
 
 class Settings extends React.Component {
     constructor(props) {
@@ -75,6 +76,8 @@ class Settings extends React.Component {
                     inline={true} 
                     onChange={this.handleCheckBoxChange}
                 />
+                <hr />
+                <div>App Version: {appVersion}</div>
             </div>
         );
     }
